@@ -32,6 +32,8 @@ var FILTER_PARAM = ['cost', 'type', 'level', 'rarity'];
 var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity'];
 var SORT_TYPE = ['昇順', '降順'];
 
+var KEYNAME_PRESET_LIST = '__btlop2db_preset_list__';
+
 // ---------
 // Variables
 var	db_ms = null;
@@ -53,6 +55,15 @@ class FilteringRule
 		this.filter = {};
 		this.sort = [];
 		this.show_detail = true;
+	}
+
+	//!	@brief	Store from oject
+	store_obj(obj)
+	{
+		this.enable_columns = obj.enable_columns;
+		this.filter = obj.filter;
+		this.sort = obj.sort;
+		this.show_detail = obj.show_detail;
 	}
 
 	//!	@brief	Check whether sorting is required
@@ -619,4 +630,147 @@ function init()
 	read_file( "db/btlop2_Weapon1.csv", recv_weapon1 );
 	read_file( "db/btlop2_Weapon2.csv", recv_weapon2 );
 	read_file( "db/btlop2_Skill.csv", recv_skill );
+
+	update_preset_list();
+}
+
+// ---------
+/**	@brief	Load preset list from local storage
+ */
+function load_preset_list()
+{
+	var	json = localStorage.getItem( KEYNAME_PRESET_LIST );
+	if( json )
+		return JSON.parse( json );
+	else
+		return [];
+}
+
+// ---------
+/**	@brief	Store preset list to local storage
+ */
+function store_preset_list(list)
+{
+	var json = JSON.stringify( list );
+	localStorage.setItem( KEYNAME_PRESET_LIST, json );
+}
+
+// ---------
+/**	@brief	Update preset pulldown list
+ */
+function update_preset_list()
+{
+	var	presets = load_preset_list();
+
+	var	pulldown = document.getElementById( 'preset_list' );
+	pulldown.innerHTML = '';
+	for( var i = 0; i < presets.length; ++i )
+	{
+		var	item = document.createElement( 'option' );
+		item.value = presets[i];
+		pulldown.appendChild( item );
+	}
+}
+
+// ---------
+/**	@brief	Load current rules from preset
+ */
+function load_preset()
+{
+	var	elem = document.getElementById( 'preset_name' );
+	var	name = elem.value.trim();
+	if( name == "" )
+		return;
+
+	var	json = localStorage.getItem( name );
+	if( json )
+	{
+		var	rule = JSON.parse( json );
+		filtering_rule.store_obj( rule );
+		updateMSList(true);
+		restore_filter_parameters();
+	}
+}
+
+// ---------
+/**	@brief	Save current rules as preset
+ */
+function save_preset()
+{
+	var	elem = document.getElementById( 'preset_name' );
+	var	name = elem.value.trim();
+	if( name == "" )
+	{
+		alert( 'プリセット名を入力してください。' );
+		return;
+	}
+
+	var	json = JSON.stringify( filtering_rule );
+	localStorage.setItem( name, json );
+
+	var presets = load_preset_list();
+	if( presets.findIndex(function(n){return n == name;}) < 0 )
+		presets.push( name );
+	store_preset_list( presets );
+
+	update_preset_list();
+}
+
+// ---------
+/**	@brief	Restore rule parameters to form
+ */
+function restore_filter_parameters()
+{
+
+	if( Object.keys(filtering_rule.filter).length > 0 )
+	{
+		for( var i = 0; i < chk_filter.length; ++i )
+		{
+			var	flag = true;
+
+			var	name = chk_filter[i].split( '_' );
+			if( name[1] in filtering_rule.filter )
+			{
+				var	vals = filtering_rule.filter[ name[1] ];
+				if( vals.findIndex(function(n){return n == name[2];}) < 0 )
+					flag = false;
+			}
+
+			var	chk = document.getElementById( chk_filter[i] );
+			chk.checked = flag;
+		}
+	}
+
+	var	idx_sort = 0;
+	if( filtering_rule.sort.length > 0 )
+	{
+		var	num = Math.min( filtering_rule.sort.length, sel_sort.length );
+		for( ; idx_sort < num; ++idx_sort )
+		{
+			var	elem0 = document.getElementById( sel_sort[idx_sort][0] );
+			var	elem1 = document.getElementById( sel_sort[idx_sort][1] );
+			if( filtering_rule.sort[idx_sort] )
+			{
+				elem0.selectedIndex = filtering_rule.sort[idx_sort][0];
+				elem1.selectedIndex = filtering_rule.sort[idx_sort][1];
+			}
+			else
+			{
+				elem0.selectedIndex = 0;
+				elem1.selectedIndex = 0;
+			}
+		}
+	}
+	for( ; idx_sort < sel_sort.length; ++idx_sort )
+	{
+		var	elem0 = document.getElementById( sel_sort[idx_sort][0] );
+		elem0.selectedIndex = 0;
+		var	elem1 = document.getElementById( sel_sort[idx_sort][1] );
+		elem1.selectedIndex = 0;
+	}
+
+	{
+		var	elem = document.getElementById( 'chk_misc_詳細表示' );
+		elem.checked = filtering_rule.show_detail;
+	}
 }

@@ -10,12 +10,27 @@
 
 <body onload="init()">
 <center>
-<header>
-	<h1 style="color: #80d0f0;">バトオペ２ＤＢ</h1>
-</header>
 <div class="main">
+	<div style="color: #80d0f0; font-size: medium;"><b>バトオペ２ＤＢ</b></div>
+
+	<hr>
+
 	<div id="preset">
+		<table>
+			<tr>
+				<td style="display: inline-flex; width: 1024px;">
+					プリセット　
+					<input id="preset_name" type="text" style="width: 300px;" placeholder="プリセット名を入力してください。" list="preset_list"/>
+					<datalist id="preset_list"></datalist>
+					<button id="preset_load" type="button" value="aaa" onclick="load_preset()">読み込み</button>
+					<button id="preset_save" type="button" value="aaa" onclick="save_preset()">保存する</button>
+					　<button id="preset_delete" type="button" value="aaa"><div style="color: #f07070;">削除する</div></button>
+				</td>
+			</tr>
+		</table>
 	</div>
+
+	<hr>
 
 	<input type="checkbox" id="label_filter" onclick='clickFilter()'/>
 	<label for="label_filter" style="cursor: pointer;">フィルタ／ソート</label>
