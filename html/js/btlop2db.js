@@ -60,8 +60,11 @@ class FilteringRule
 	{
 		for( var i = 0; i < this.sort.length; ++i )
 		{
-			if( this.sort[i][0] > 0 )
-				return true;
+			if( this.sort[i] )
+			{
+				if( this.sort[i][0] > 0 )
+					return true;
+			}
 		}
 		return false;
 	}
@@ -500,6 +503,8 @@ function updateMSList(update_filter)
 	var idx_skills = db.searchColumn( 'skills' );
 
 	// Create table
+	var PERIOD_HEADER = 15;
+	var count = PERIOD_HEADER;
 	var	tbl = document.createElement("table");
 	for( var i = 0; i < db.getRecordNum(); ++i )
 	{
@@ -510,18 +515,22 @@ function updateMSList(update_filter)
 			bgcol = 'supportbg';
 
 		// Header
-		var	row = tbl.insertRow(-1);
-		for( var j = 0; j < cidx0.length; ++j )
+		if( filtering_rule.show_detail || count >= PERIOD_HEADER )
 		{
-			var	text = db.columns[cidx0[j]];
+			var	row_head = tbl.insertRow(-1);
+			for( var j = 0; j < cidx0.length; ++j )
+			{
+				var	text = db.columns[cidx0[j]];
 
-			var cell = document.createElement( 'th' );
-			cell.innerHTML = PARAM_NAME[text];
-			row.appendChild( cell );
+				var cell = document.createElement( 'th' );
+				cell.innerHTML = PARAM_NAME[text];
+				row_head.appendChild( cell );
+			}
+			count = 0;
 		}
 
 		// Parameters - line 1
-		row = tbl.insertRow(-1);
+		var row = tbl.insertRow(-1);
 		for( var j = 0; j < cidx0.length; ++j )
 		{
 			var	cell = row.insertCell(-1);
@@ -544,7 +553,7 @@ function updateMSList(update_filter)
 		}
 
 		// Parameters - line 2
-		if( cidx1.length > 0 )
+		if( filtering_rule.show_detail && cidx1.length > 0 )
 		{
 			var	first_span = 1;
 			var	span = Math.floor((cidx0.length - first_span) / (cidx1.length - 1));
@@ -588,6 +597,8 @@ function updateMSList(update_filter)
 				}
 			}
 		}
+
+		++count;
 	}
 
 	var	elem = document.getElementById('list');
