@@ -4,8 +4,9 @@
  */
 function create_checkbox(id_, label_, init_)
 {
-	var elem = document.createElement('div');
-	elem.className = 'checkstyle';
+	var elem = document.createElement('label');
+	elem.className = 'container';
+	elem.innerText = label_;
 
 	var chk = document.createElement('input');
 	chk.type = 'checkbox';
@@ -13,12 +14,9 @@ function create_checkbox(id_, label_, init_)
 	chk.checked = init_;
 	elem.appendChild( chk );
 
-	var lbl = document.createElement('label');
-	lbl.htmlFor = id_;
-	lbl.textContent = label_;
-	lbl.style.cursor = 'pointer';
-	lbl.style.fontSize = 'small';
-	elem.appendChild( lbl );
+	var spn = document.createElement('span');
+	spn.className = 'checkmark';
+	elem.appendChild( spn );
 
 	return elem;
 }

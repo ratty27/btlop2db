@@ -54,7 +54,7 @@ class FilteringRule
 		this.enable_columns = null;
 		this.filter = {};
 		this.sort = [];
-		this.show_detail = true;
+		this.show_detail = false;
 	}
 
 	//!	@brief	Store from oject
@@ -455,6 +455,8 @@ function updateMSList(update_filter)
 
 		elem_filter.appendChild( tbl_sort );
 	}
+
+	restore_filter_parameters();
 
 	// ---
 	// List
