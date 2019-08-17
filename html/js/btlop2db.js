@@ -705,6 +705,8 @@ function save_preset()
 		return;
 	}
 
+	apply_filters();
+
 	var	json = JSON.stringify( filtering_rule );
 	localStorage.setItem( name, json );
 
@@ -714,6 +716,8 @@ function save_preset()
 	store_preset_list( presets );
 
 	update_preset_list();
+
+	alert( name + "\nを保存しました。" );
 }
 
 // ---------
@@ -721,7 +725,6 @@ function save_preset()
  */
 function restore_filter_parameters()
 {
-
 	if( Object.keys(filtering_rule.filter).length > 0 )
 	{
 		for( var i = 0; i < chk_filter.length; ++i )
@@ -773,4 +776,30 @@ function restore_filter_parameters()
 		var	elem = document.getElementById( 'chk_misc_詳細表示' );
 		elem.checked = filtering_rule.show_detail;
 	}
+}
+
+// ---------
+/**	@brief	Delete preset
+ */
+function delete_preset()
+{
+	var	elem = document.getElementById( 'preset_name' );
+	var	name = elem.value.trim();
+	if( name == "" )
+		return;
+
+	var res = confirm( name + "\nを削除してよろしいですか？" );
+	if( !res )
+		return;
+
+	var presets = load_preset_list();
+	var	pidx = presets.findIndex( function(n){return n == name;} );
+	if( pidx >= 0 )
+		presets.splice( pidx, 1 );
+	store_preset_list( presets );
+
+	localStorage.removeItem( name );
+
+	update_preset_list();
+	elem.value = '';
 }
