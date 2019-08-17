@@ -1,0 +1,48 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<title>バトオペ２ＤＢ</title>
+<link rel="stylesheet" type="text/css" href="css/style.css">
+<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/database.js"></script>
+<script type="text/javascript" src="js/btlop2db.js"></script>
+</head>
+
+<body onload="init()">
+<center>
+<header>
+	<h1 style="color: #80d0f0;">バトオペ２ＤＢ</h1>
+</header>
+<div class="main">
+	<div id="preset">
+	</div>
+
+	<input type="checkbox" id="label_filter" onclick='clickFilter()'/>
+	<label for="label_filter" style="cursor: pointer;">フィルタ／ソート</label>
+    <div id="filter" style="transition: 0.5s; height: auto;">
+	</div>
+
+	<hr>
+
+	<div id="list">
+		読み込み中...
+	</div>
+</div>
+</center>
+
+<script>
+document.getElementById('filter').style.display = 'none';
+
+function clickFilter()
+{
+	var chk = document.getElementById('label_filter');
+	var fil = document.getElementById('filter');
+	if( chk.checked )
+		fil.style.display = 'block';
+	else
+		fil.style.display = 'none';
+}
+</script>
+
+</body>
+</html>
