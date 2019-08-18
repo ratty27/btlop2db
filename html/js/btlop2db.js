@@ -386,7 +386,7 @@ function updateMSList(update_filter)
 			div_filter_button.style.textAlign = 'right';
 
 			var btn_clear = document.createElement('button');
-			btn_clear.style.width = '60px';
+			btn_clear.style.width = '80px';
 			btn_clear.textContent = '全解除';
 			btn_clear.onclick = function()
 				{
@@ -399,7 +399,7 @@ function updateMSList(update_filter)
 			div_filter_button.appendChild( btn_clear );
 
 			var btn_selectall = document.createElement('button');
-			btn_selectall.style.width = '60px';
+			btn_selectall.style.width = '80px';
 			btn_selectall.textContent = '全選択';
 			btn_selectall.onclick = function()
 				{

@@ -134,3 +134,78 @@ table td {
   -ms-transform: rotate(45deg);
   transform: rotate(45deg);
 }
+
+/* --- Button --- */
+
+button {
+  display: inline-block;
+  padding: 0.3em 1em;
+  text-decoration: none;
+  color: white;
+  background: #203848;
+  border: solid 1px #469196;
+  border-radius: 2px;
+  transition: .4s;
+}
+
+button:hover {
+  background: #469196;
+  color: white;
+}
+
+/* --- Select --- */
+
+.cp_ipselect {
+	overflow: hidden;
+	text-align: center;
+}
+.cp_ipselect select {
+	width: 100%;
+	padding-right: 1em;
+	cursor: pointer;
+	text-indent: 0.01px;
+	text-overflow: ellipsis;
+	border: none;
+	outline: none;
+	background: #203848;
+	background-image: none;
+	box-shadow: none;
+	-webkit-appearance: none;
+	appearance: none;
+}
+.cp_ipselect select::-ms-expand {
+    display: none;
+}
+.cp_ipselect.cp_sl02 {
+	position: relative;
+	border: 1px solid #469196;
+	border-radius: 2px;
+	background: #469196;
+}
+.cp_ipselect.cp_sl02::before {
+	position: absolute;
+	top: 0.4em;
+	right: 0.9em;
+	width: 0;
+	height: 0;
+	padding: 0;
+	content: '';
+	border-left: 6px solid transparent;
+	border-right: 6px solid transparent;
+	border-top: 6px solid #469196;
+	pointer-events: none;
+}
+.cp_ipselect.cp_sl02:after {
+	position: absolute;
+	top: 0;
+	right: 2.5em;
+	bottom: 0;
+	width: 1px;
+	content: '';
+	border-left: 1px solid #469196;
+}
+.cp_ipselect.cp_sl02 select {
+	padding: 1px 1px 1px 1px;
+	color: white;
+}
+

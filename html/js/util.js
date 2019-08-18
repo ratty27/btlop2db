@@ -37,5 +37,10 @@ function create_pulldown(id_, items_, init_)
 	}
 	if( init_ )
 		item.selectedIndex = init_;
-	return item;
+
+	var div = document.createElement( 'div' );
+	div.className = 'cp_ipselect cp_sl02';
+	div.style.width = '100px';
+	div.appendChild( item );
+	return div;
 }
