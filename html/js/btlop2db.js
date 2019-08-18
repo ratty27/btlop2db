@@ -623,7 +623,8 @@ function updateMSList(update_filter)
 		// Parameters - line 2
 		if( filtering_rule.show_detail && cidx1.length > 0 )
 		{
-			var	first_span = 1;
+			var idx_exp = db_skill.searchColumn( 'explanation' );
+			var	first_span = 2;
 			var	span = Math.floor((cidx0.length - first_span) / (cidx1.length - 1));
 			var	num = 0;
 			row = tbl.insertRow(-1);
@@ -636,7 +637,9 @@ function updateMSList(update_filter)
 					text = '<table border=0 width="100%">'
 					for( var k = 0; k < skills.length; ++k )
 					{
-						text += '<tr><td class="skill_la">' + skills[k].slice(0, -3) + '</td>';
+						var tips_idx = db_skill.findIndex( 'name', skills[k] );
+						var tips = db_skill.raw[tips_idx][idx_exp];
+						text += '<tr><td class="skill_la"><span title="' + tips + '">' + skills[k].slice(0, -3) + '</span></td>';
 						text += '<td class="skill_ra">' + skills[k].slice(-3) + '</td></tr>';
 					}
 					text += '</table>';
