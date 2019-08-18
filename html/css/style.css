@@ -23,6 +23,11 @@ table td {
 	border: solid 1px #5c5e5d;
 }
 
+a:link { color: #c0c0c0; }
+a:visited { color: #c0c0c0; }
+a:hover { color: #f0f0f0; }
+a:active { color: #ffffff; }
+
 .main {
 	width: 1024px;
 	text-align: left;
