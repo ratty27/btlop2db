@@ -52,6 +52,7 @@ var	db_weapon2 = null;
 var	db_skill = null;
 var chk_filter = null;
 var sel_sort = null;
+var	args = {}
 
 // ---------
 /**	@brief	Filtering rule class
@@ -138,7 +139,10 @@ function init_ms_db()
 
 	// Add user's evaluation column
 	db_ms.addColumn( 'eval', DEFAULT_EVALUATION );
-	load_evaluation();
+	if( 'e' in args )
+		decode_share_url( args['e'] );
+	else
+		load_evaluation();
 }
 
 // ---------
@@ -597,6 +601,7 @@ function updateMSList(update_filter)
 					{
 						db_ms.raw[idx][idx_eval] = item.selectedIndex;
 					}
+					update_share_url();
 				} );
 			sel.style.width = '40px';
 
@@ -639,7 +644,7 @@ function updateMSList(update_filter)
 				if( cidx1[j] == idx_skills )
 				{
 					var	skills = text.split( '\n' )
-					text = '<table border=0 width="100%">'
+					text = '<table border=0 width="100%" style="box-shadow: none;">'
 					for( var k = 0; k < skills.length; ++k )
 					{
 						var tips_idx = db_skill.findIndex( 'name', skills[k] );
@@ -681,12 +686,51 @@ function updateMSList(update_filter)
 	var	elem = document.getElementById('list');
 	elem.innerHTML = '';
 
+	var	div_eval = document.createElement( 'div' );
+
 	// - save eval button
 	var btn_save_eval = document.createElement('button');
 	btn_save_eval.style.width = '200px';
+	btn_save_eval.style.cssFloat = 'left';
 	btn_save_eval.textContent = '変更した評価を保存する';
 	btn_save_eval.onclick = save_evaluation;
-	elem.appendChild( btn_save_eval );
+	div_eval.appendChild( btn_save_eval );
+
+	var	url_div = document.createElement( 'div' );
+	url_div.style.width = '100%';
+	url_div.style.textAlign = 'right';
+	div_eval.appendChild( url_div );
+
+	// - URL label
+	var rl_exp = 'このURLをコピペすれば、あなたの評価設定を他の人に見て\nもらうことが出来ます。\nこのURLを開いても、その相手が「変更した評価を保存する」\nボタンを押さない限り、相手の評価データが破壊されることは\nありません。';
+	var url_label = document.createElement( 'span' );
+	url_label.innerText = '共有用URL:';
+	url_label.title = rl_exp;
+	url_div.appendChild( url_label );
+
+	// - URL
+	var url_text = document.createElement( 'input' );
+	url_text.id = 'share_url';
+	url_text.type = 'text';
+	url_text.style.width = '512px';
+//	url_text.readOnly = true;
+	url_label.appendChild( url_text );
+
+	// - Copy button
+	var btn_copy = document.createElement( 'button' );
+	btn_copy.style.width = '60px';
+	btn_copy.style.fontSize = 'x-small';
+	btn_copy.textContent = 'コピー';
+	btn_copy.onclick = function()
+		{
+			var	elem = document.getElementById( 'share_url' );
+			elem.select();
+			document.execCommand( 'copy' );
+		};
+	url_div.appendChild( btn_copy );
+
+	div_eval.appendChild( url_div );
+	elem.appendChild( div_eval );
 
 	// - MS list
 	elem.appendChild( tbl );
@@ -695,6 +739,11 @@ function updateMSList(update_filter)
 	var btn_save_eval2 = btn_save_eval.cloneNode( true );
 	btn_save_eval2.onclick = save_evaluation;
 	elem.appendChild( btn_save_eval2 );
+
+
+	// ---
+	// Update share URL
+	update_share_url();
 }
 
 // ---------
@@ -702,6 +751,20 @@ function updateMSList(update_filter)
  */
 function init()
 {
+	var	params = location.search;
+	if( params.startsWith('?') )
+	{
+		params = params.substring(1).split('&');
+		for( var i = 0; i < params.length; i++ )
+		{
+			if( params[i] == '' )
+				continue;
+			var val = params[i].split('=');
+			if( val.length == 2 )
+				args[ val[0] ] = val[1];
+		}
+	}
+
 	var	recv_ms = function(x) { db_ms = csv_to_db(x); init_ms_db(); updateMSList(true); }
 	var	recv_weapon1 = function(x) { db_weapon1 = csv_to_db(x); updateMSList(true); }
 	var	recv_weapon2 = function(x) { db_weapon2 = csv_to_db(x); updateMSList(true); }
@@ -710,6 +773,8 @@ function init()
 	read_file( "db/btlop2_Weapon1.csv", recv_weapon1 );
 	read_file( "db/btlop2_Weapon2.csv", recv_weapon2 );
 	read_file( "db/btlop2_Skill.csv", recv_skill );
+
+	document.getElementById('btlop2dbtitle').href = get_current_url();
 
 	update_preset_list();
 }
@@ -925,5 +990,107 @@ function load_evaluation()
 			db_ms.raw[i][idx_eval] = data[id];
 		else
 			db_ms.raw[i][idx_eval] = DEFAULT_EVALUATION;
+	}
+}
+
+// ---------
+/**	@brief	Update share URL
+ */
+function update_share_url()
+{
+	// Collect modified evaluations
+	var	idx_id = db_ms.searchColumn( 'id' );
+	var	idx_eval = db_ms.searchColumn( 'eval' );
+	var	mod = [ [], [], [], [], [] ];
+	for( var i = 0; i < db_ms.getRecordNum(); ++i )
+	{
+		var	n = db_ms.raw[i][idx_eval];
+		if( n < DEFAULT_EVALUATION )
+			mod[n].push( db_ms.raw[i][idx_id] );
+	}
+
+	// Write to binary
+	var	bin = new bitstream( 2048 );
+	// - # of bits for writing id
+	var	bits = 10;
+	bin.write( bits, 8 );
+	for( var i = 0; i < mod.length; ++i )
+	{
+		var	n = mod[i].length;
+		bin.write( n, bits );
+		for( var j = 0; j < mod[i].length; ++j )
+		{
+			n = mod[i][j];
+			bin.write( n, bits );
+		}
+	}
+	// - Encode to text
+	var	code = encode_base64( bin );
+
+	// Publish URL
+	var	elem = document.getElementById( 'share_url' );
+	var	baseurl = get_current_url();
+	elem.value = baseurl + '?e=' + code;
+
+	// Verify
+/*	bin = decode_base64( code );
+	bits = bin.read( 8 );
+	if( bits != 10 )
+	{
+		console.error( 'Invalid bits' );
+		return;
+	}
+	for( var i = 0; i < mod.length; ++i )
+	{
+		var	n = bin.read( bits );
+		for( var j = 0; j < n; ++j )
+		{
+			var id = bin.read( bits );
+			var	idx = db_ms.findIndex( idx_id, id );
+			if( idx < 0 )
+			{
+				console.error( 'Failed to read ID' );
+				return;
+			}
+			var	e = db_ms.raw[idx][idx_eval];
+			if( e != i )
+			{
+				console.error( 'Eval is not valid' );
+				return;
+			}
+		}
+	}
+	console.log( 'Verifying successfly' );*/
+}
+
+// ---------
+/**	@brief	Decode shared evaluation
+ */
+function decode_share_url( e )
+{
+	var	idx_id = db_ms.searchColumn( 'id' );
+	var	idx_eval = db_ms.searchColumn( 'eval' );
+
+	bin = decode_base64( e );
+	bits = bin.read( 8 );
+	if( bits == 0 )
+	{
+		console.error( "Decode error: Invalid bits" );
+		return;	
+	}
+	for( var i = 0; i < 5; ++i )
+	{
+		var	n = bin.read( bits );
+		for( var j = 0; j < n; ++j )
+		{
+			var id = bin.read( bits );
+			var	idx = db_ms.findIndex( idx_id, id );
+			if( idx < 0 )
+			{
+				console.error( 'Failed to read ID' );
+				return;
+			}
+			db_ms.raw[idx][idx_eval] = i;
+		}
 	}
 }
