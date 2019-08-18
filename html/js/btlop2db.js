@@ -1,3 +1,8 @@
+/*
+ * Copyright 2019 ratty27
+ * Released under the MIT license.
+ * see https://opensource.org/licenses/MIT
+ */
 
 // ---------
 // Constants
