@@ -31,6 +31,7 @@ var	PARAM_NAME = {
 var FILTER_PARAM = ['cost', 'type', 'level', 'rarity'];
 var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity'];
 var SORT_TYPE = ['昇順', '降順'];
+var EVAL_PARAM = ['Ｓ', 'Ａ', 'Ｂ', 'Ｃ', 'Ｄ', 'Ｅ'];
 
 var KEYNAME_PRESET_LIST = '__btlop2db_preset_list__';
 
@@ -125,6 +126,9 @@ function init_ms_db()
 		else if( compati == 'S' )
 			db_ms.raw[i][idx_compati] = '宇宙'
 	}
+
+	// Add user's evaluation column
+	db_ms.addColumn( 'eval', 5 );
 }
 
 // ---------
@@ -353,6 +357,8 @@ function updateMSList(update_filter)
 		var head_filter_cell = document.createElement( 'th' );
 		head_filter_cell.colSpan = '2';
 		head_filter_cell.innerHTML = 'フィルタ';
+		head_filter_cell.style.textAlign = 'left';
+		head_filter_cell.style.fontSize = 'small';
 		head_filter_row.appendChild( head_filter_cell );
 
 		// Parameters
@@ -427,6 +433,8 @@ function updateMSList(update_filter)
 		var head_sort_cell = document.createElement( 'th' );
 		head_sort_cell.colSpan = '3';
 		head_sort_cell.innerHTML = 'ソート';
+		head_sort_cell.style.textAlign = 'left';
+		head_sort_cell.style.fontSize = 'small';
 		head_sort_row.appendChild( head_sort_cell );
 
 		sel_sort = [];
@@ -467,8 +475,8 @@ function updateMSList(update_filter)
 
 	if( !filtering_rule.enable_columns )
 	{
-		filtering_rule.enable_columns = db_ms.columns.concat();
-		filtering_rule.enable_columns.shift();	// To remove 'id' column
+		// Set default showing columns
+		filtering_rule.enable_columns = db_ms.columns.concat().filter( n => n != 'id' && n != 'eval' );
 	}
 
 	// Filtering with user's rules
@@ -516,8 +524,10 @@ function updateMSList(update_filter)
 		else
 			cidx0.push( idx );
 	}
+	var idx_id = db.searchColumn( 'id' );
 	var idx_type = db.searchColumn( 'type' );
 	var idx_skills = db.searchColumn( 'skills' );
+	var idx_eval = db.searchColumn( 'eval' );
 
 	// Create table
 	var PERIOD_HEADER = 15;
@@ -535,11 +545,16 @@ function updateMSList(update_filter)
 		if( filtering_rule.show_detail || count >= PERIOD_HEADER )
 		{
 			var	row_head = tbl.insertRow(-1);
+
+			var cell = document.createElement( 'th' );
+			cell.innerHTML = '評価';
+			row_head.appendChild( cell );
+
 			for( var j = 0; j < cidx0.length; ++j )
 			{
 				var	text = db.columns[cidx0[j]];
 
-				var cell = document.createElement( 'th' );
+				cell = document.createElement( 'th' );
 				cell.innerHTML = PARAM_NAME[text];
 				row_head.appendChild( cell );
 			}
@@ -548,6 +563,23 @@ function updateMSList(update_filter)
 
 		// Parameters - line 1
 		var row = tbl.insertRow(-1);
+		{	// User's evaluation
+			var	sel = create_pulldown( 'eval_' + db.raw[i][idx_id], EVAL_PARAM, db.raw[i][idx_eval],
+				function(item)
+				{
+					var	id_ = item.id.split('_');
+					var	idx = db_ms.findIndex( 'id', Number(id_[1]) );
+					if( idx >= 0 )
+					{
+						db_ms.raw[idx][idx_eval] = item.selectedIndex;
+					}
+				} );
+			sel.style.width = '40px';
+
+			var cell = row.insertCell(-1);
+			cell.appendChild( sel );
+			row.appendChild( cell );
+		}
 		for( var j = 0; j < cidx0.length; ++j )
 		{
 			var	cell = row.insertCell(-1);

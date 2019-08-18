@@ -194,7 +194,7 @@ button:hover {
 .cp_ipselect.cp_sl02::before {
 	position: absolute;
 	top: 0.4em;
-	right: 0.9em;
+	right: 0.1em;
 	width: 0;
 	height: 0;
 	padding: 0;
@@ -207,7 +207,7 @@ button:hover {
 .cp_ipselect.cp_sl02:after {
 	position: absolute;
 	top: 0;
-	right: 2.5em;
+	right: 1.0em;
 	bottom: 0;
 	width: 1px;
 	content: '';

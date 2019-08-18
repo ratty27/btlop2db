@@ -24,10 +24,12 @@ function create_checkbox(id_, label_, init_)
 // ---------
 /**	@brief	Create pulldown
  */
-function create_pulldown(id_, items_, init_)
+function create_pulldown(id_, items_, init_, callback)
 {
 	var	item = document.createElement( 'select' );
 	item.id = id_;
+	if( callback )
+		item.addEventListener( "change", function() { callback(item); } );
 	for( var i = 0; i < items_.length; ++i )
 	{
 		var	opt = document.createElement( 'option' );

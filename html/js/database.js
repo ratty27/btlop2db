@@ -32,6 +32,14 @@ class Database
 			return 0;
 	}
 
+	//!	@brief	Add column
+	addColumn(name, init_)
+	{
+		this.columns.push(name);
+		for( var i = 0; i < this.raw.length; ++i )
+			this.raw[i].push( init_ );
+	}
+
 	//!	@brief	Get # of column
 	getColumnNum()
 	{
@@ -94,6 +102,20 @@ class Database
 		ret.setColumns( this.columns );
 		ret.setRaw( arr );
 		return ret;
+	}
+
+	//!	@brief	Find index
+	findIndex( key, val )
+	{
+		var	idx = key;
+		if( typeof idx == 'string' )
+			idx = this.searchColumn( idx );
+		for( var i = 0; i < this.raw.length; ++i )
+		{
+			if( this.raw[i][idx] == val )
+				return i;
+		}
+		return -1;
 	}
 }
 
