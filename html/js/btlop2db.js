@@ -34,7 +34,7 @@ var	PARAM_NAME = {
 	"eval": "評価"
 }
 
-var FILTER_PARAM = ['cost', 'type', 'level', 'rarity', 'eval'];
+var FILTER_PARAM = ['cost', 'type', 'level', 'rarity'];
 var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity', "eval"];
 var SORT_TYPE = ['昇順', '降順'];
 var EVAL_PARAM = ['Ｓ', 'Ａ', 'Ｂ', 'Ｃ', 'Ｄ', 'Ｅ'];
