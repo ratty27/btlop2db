@@ -25,11 +25,12 @@ var	PARAM_NAME = {
 	"main_weapon1": "主兵装１",
 	"main_weapon2": "主兵装２",
 	"sub_weapon": "副兵装",
-	"skills": "スキル"
+	"skills": "スキル",
+	"eval": "評価"
 }
 
-var FILTER_PARAM = ['cost', 'type', 'level', 'rarity'];
-var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity'];
+var FILTER_PARAM = ['cost', 'type', 'level', 'rarity', 'eval'];
+var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity', "eval"];
 var SORT_TYPE = ['昇順', '降順'];
 var EVAL_PARAM = ['Ｓ', 'Ａ', 'Ｂ', 'Ｃ', 'Ｄ', 'Ｅ'];
 
@@ -311,6 +312,15 @@ function filter_ms(record)
 			if( !valid )
 				return false;
 		}
+		else if( key == 'eval' )
+		{
+			var	idx = db_ms.searchColumn( 'eval' );
+			if( idx >= 0 )
+			{
+				if( vals.findIndex(function(n){return n == EVAL_PARAM[record[idx]];}) < 0 )
+					return false;
+			}
+		}
 		else
 		{
 			var	idx = db_ms.searchColumn( key );
@@ -388,6 +398,9 @@ function updateMSList(update_filter)
 		}
 		arr_skill1.sort();
 		chk_filter = chk_filter.concat( add_filter(tbl_filter, 'スキル', 'skill', arr_skill1) );
+
+		// Evaluation
+		chk_filter = chk_filter.concat( add_filter(tbl_filter, '評価', 'eval', EVAL_PARAM) );
 
 		// misc
 		chk_filter = chk_filter.concat( add_filter(tbl_filter, 'その他', 'misc', ['詳細表示']) );
@@ -499,6 +512,8 @@ function updateMSList(update_filter)
 					var	less = -1;
 					if( filtering_rule.sort[i][1] )
 						less = 1;
+					if( type == 6 )		// Evaluaion value
+						less = - less;
 					if( type == 0 )
 					{	// None
 					}
