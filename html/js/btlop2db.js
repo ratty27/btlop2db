@@ -210,6 +210,7 @@ function apply_filters()
 
 // ---------
 /**	@brief	Check whether record is showing
+ *	@todo	Skip if all filters are selected...
  */
 function filter_ms(record)
 {
@@ -286,14 +287,17 @@ function filter_ms(record)
 		else if( key == 'skill' )
 		{
 			var	idx = db_ms.searchColumn( 'skills' );
-			var	skills = record[idx];
+			var	skills = record[idx].split( '\n' );
 			var	valid = false;
-			for( var i = 0; i < vals.length; ++i )
+			for( var i = 0; !valid && (i < vals.length); ++i )
 			{
-				if( skills.indexOf(vals[i]) >= 0 )
+				for( var j = 0; j < skills.length; ++j )
 				{
-					valid = true;
-					break;
+					if( skills[j].startsWith(vals[i]) )
+					{
+						valid = true;
+						break;
+					}
 				}
 			}
 			if( !valid )
