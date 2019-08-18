@@ -33,7 +33,10 @@ var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity'];
 var SORT_TYPE = ['昇順', '降順'];
 var EVAL_PARAM = ['Ｓ', 'Ａ', 'Ｂ', 'Ｃ', 'Ｄ', 'Ｅ'];
 
+var	DEFAULT_EVALUATION = 5;
+
 var KEYNAME_PRESET_LIST = '__btlop2db_preset_list__';
+var KEYNAME_USER_EVAL = '__btlop2db_user_eval__';
 
 // ---------
 // Variables
@@ -128,7 +131,8 @@ function init_ms_db()
 	}
 
 	// Add user's evaluation column
-	db_ms.addColumn( 'eval', 5 );
+	db_ms.addColumn( 'eval', DEFAULT_EVALUATION );
+	load_evaluation();
 }
 
 // ---------
@@ -650,9 +654,24 @@ function updateMSList(update_filter)
 		++count;
 	}
 
+	// Append to document
 	var	elem = document.getElementById('list');
 	elem.innerHTML = '';
+
+	// - save eval button
+	var btn_save_eval = document.createElement('button');
+	btn_save_eval.style.width = '200px';
+	btn_save_eval.textContent = '変更した評価を保存する';
+	btn_save_eval.onclick = save_evaluation;
+	elem.appendChild( btn_save_eval );
+
+	// - MS list
 	elem.appendChild( tbl );
+
+	// - save eval button
+	var btn_save_eval2 = btn_save_eval.cloneNode( true );
+	btn_save_eval2.onclick = save_evaluation;
+	elem.appendChild( btn_save_eval2 );
 }
 
 // ---------
@@ -755,7 +774,7 @@ function save_preset()
 
 	update_preset_list();
 
-	alert( name + "\nを保存しました。" );
+//	alert( name + "\nを保存しました。" );
 }
 
 // ---------
@@ -840,4 +859,48 @@ function delete_preset()
 
 	update_preset_list();
 	elem.value = '';
+}
+
+// ---------
+/**	@brief	Save evaulation to local storage
+ */
+function save_evaluation()
+{
+	var	data = {};
+	var	idx_id = db_ms.searchColumn( 'id' );
+	var	idx_eval = db_ms.searchColumn( 'eval' );
+	for( var i = 0; i < db_ms.getRecordNum(); ++i )
+	{
+		var	val = db_ms.raw[i][idx_eval];
+		if( val < 5 )
+		{
+			var	id = db_ms.raw[i][idx_id];
+			data[id] = val;
+		}
+	}
+
+	var	json = JSON.stringify( data );
+	localStorage.setItem( KEYNAME_USER_EVAL, json );
+}
+
+// ---------
+/**	@brief	Load evaulation from local storage
+ */
+function load_evaluation()
+{
+	var	json = localStorage.getItem( KEYNAME_USER_EVAL );
+	if( !json )
+		return;
+
+	var	data = JSON.parse( json );
+	var	idx_id = db_ms.searchColumn( 'id' );
+	var	idx_eval = db_ms.searchColumn( 'eval' );
+	for( var i = 0; i < db_ms.getRecordNum(); ++i )
+	{
+		var	id = db_ms.raw[i][idx_id];
+		if( id in data )
+			db_ms.raw[i][idx_eval] = data[id];
+		else
+			db_ms.raw[i][idx_eval] = DEFAULT_EVALUATION;
+	}
 }
