@@ -64,6 +64,15 @@ table td {
 	font-size: small;
 }
 
+/* --- Text --- */
+
+.textborder {
+  text-shadow:2px 2px 0 #206080, -2px -2px 0 #206080,
+              -2px 2px 0 #206080, 2px -2px 0 #206080,
+              0px 2px 0 #206080,  -2px 0 #206080,
+              -2px 0 0 #206080, 2px 0 0 #206080;
+}
+
 /* --- Checkbox --- */
 
 /* Customize the label (the container) */
