@@ -5,6 +5,18 @@
  */
 
 // ---------
+/**	@brief	Get current URL
+ */
+function get_current_url()
+{
+	var	url = document.location.href;
+	var	pos = url.indexOf('?');
+	if( pos >= 0 )
+		url = url.substr( 0, pos );
+	return url;
+}
+
+// ---------
 /**	@brief	Create checkbox
  */
 function create_checkbox(id_, label_, init_)
