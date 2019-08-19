@@ -67,6 +67,8 @@ if not os.path.isfile(filename):
 	sys.exit( 1 )
 
 basename, ext = os.path.splitext( filename )
+if argc >= 3:
+	basename = os.path.join( argv[2], os.path.basename(basename) );
 
 book = xlrd.open_workbook( filename )
 output_csv( book, SHEETNAME_MS, basename )
