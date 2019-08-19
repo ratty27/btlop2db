@@ -44,6 +44,11 @@ var	DEFAULT_EVALUATION = 5;
 var KEYNAME_PRESET_LIST = '__btlop2db_preset_list__';
 var KEYNAME_USER_EVAL = '__btlop2db_user_eval__';
 
+var HASH_MS_CSV = '0'
+var HASH_WEAPON1_CSV = '0'
+var HASH_WEAPON2_CSV = '0'
+var HASH_SKILL_CSV = '0'
+
 // ---------
 // Variables
 var	db_ms = null;
@@ -769,10 +774,10 @@ function init()
 	var	recv_weapon1 = function(x) { db_weapon1 = csv_to_db(x); updateMSList(true); }
 	var	recv_weapon2 = function(x) { db_weapon2 = csv_to_db(x); updateMSList(true); }
 	var	recv_skill = function(x) { db_skill = csv_to_db(x); updateMSList(true); }
-	read_file( "db/btlop2_MS.csv", recv_ms );
-	read_file( "db/btlop2_Weapon1.csv", recv_weapon1 );
-	read_file( "db/btlop2_Weapon2.csv", recv_weapon2 );
-	read_file( "db/btlop2_Skill.csv", recv_skill );
+	read_file( "db/btlop2_MS.csv?v=" + HASH_MS_CSV, recv_ms );
+	read_file( "db/btlop2_Weapon1.csv?v=" + HASH_WEAPON1_CSV, recv_weapon1 );
+	read_file( "db/btlop2_Weapon2.csv?v=" + HASH_WEAPON2_CSV, recv_weapon2 );
+	read_file( "db/btlop2_Skill.csv?v=" + HASH_SKILL_CSV, recv_skill );
 
 	document.getElementById('btlop2dbtitle').href = get_current_url();
 
