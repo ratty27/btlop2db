@@ -19,7 +19,7 @@ var	PARAM_NAME = {
 	"ranged": "射撃",
 	"melee": "格闘",
 	"speed": "スピード",
-	"thruster": "スラスター",
+	"thruster": "ｽﾗｽﾀｰ",
 	"close_range": "近スロ",
 	"medium_range": "中スロ",
 	"long_range": "遠スロ",
@@ -31,13 +31,15 @@ var	PARAM_NAME = {
 	"main_weapon2": "主兵装２",
 	"sub_weapon": "副兵装",
 	"skills": "スキル",
+	"melee_power": "格闘判定",
 	"eval": "評価"
 }
 
-var FILTER_PARAM = ['cost', 'type', 'level', 'rarity'];
-var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity', "eval"];
+var FILTER_PARAM = ['cost', 'type', 'level', 'rarity', 'melee_power'];
+var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity', "eval", 'melee_power'];
 var SORT_TYPE = ['昇順', '降順'];
 var EVAL_PARAM = ['Ｓ', 'Ａ', 'Ｂ', 'Ｃ', 'Ｄ', 'Ｅ'];
+var MELEE_POWER_PARAM = ['弱', '中', '強'];
 
 var	DEFAULT_EVALUATION = 5;
 
@@ -125,6 +127,7 @@ function init_ms_db()
 {
 	var	idx_type = db_ms.searchColumn( 'type' );
 	var	idx_compati = db_ms.searchColumn( 'compatibility' );
+	var	idx_melee_power = db_ms.searchColumn( 'melee_power' );
 	for( var i = 0; i < db_ms.getRecordNum(); ++i )
 	{
 		var	type = db_ms.raw[i][idx_type];
@@ -140,6 +143,14 @@ function init_ms_db()
 			db_ms.raw[i][idx_compati] = '地上'
 		else if( compati == 'S' )
 			db_ms.raw[i][idx_compati] = '宇宙'
+
+		var	mpower = db_ms.raw[i][idx_melee_power];
+		if( mpower == 'strong' )
+			db_ms.raw[i][idx_melee_power] = '強';
+		else if( mpower == 'normal' )
+			db_ms.raw[i][idx_melee_power] = '中';
+		else if( mpower == 'weak' )
+			db_ms.raw[i][idx_melee_power] = '弱';
 	}
 
 	// Add user's evaluation column
@@ -184,6 +195,25 @@ function add_filter(tbl, name, id_, arr)
 }
 
 // ---------
+/**	@brief	Split check-box label
+ */
+function split_chk_label( label )
+{
+	var	pos0 = label.indexOf( '_' );
+	var	pos1 = label.lastIndexOf( '_' );
+	if( pos0 == pos1 )
+	{	// error
+		return null;
+	}
+
+	return [
+		label.substring( 0, pos0 ),
+		label.substring( pos0 + 1, pos1 ),
+		label.substring( pos1 + 1, label.length )
+	];
+}
+
+// ---------
 /**	@brief	Apply filter and sort
  */
 function apply_filters()
@@ -204,7 +234,7 @@ function apply_filters()
 			continue;
 		}
 
-		var	name = chk_filter[i].split('_');
+		var	name = split_chk_label( chk_filter[i] );
 		if( typeof filtering_rule.filter[name[1]] != 'object' )
 			filtering_rule.filter[name[1]] = []
 		if( chk.checked )
@@ -394,8 +424,16 @@ function updateMSList(update_filter)
 		for( var i = 0; i < FILTER_PARAM.length; ++i )
 		{
 			var keyname = FILTER_PARAM[i];
-			var arr = db_ms.distinct( keyname );
-			arr.sort();
+			var arr;
+			if( keyname == 'melee_power' )
+			{	// Kanji can't be sorted
+				arr = MELEE_POWER_PARAM;
+			}
+			else
+			{
+				arr = db_ms.distinct( keyname );
+				arr.sort();
+			}
 			chk_filter = chk_filter.concat( add_filter(tbl_filter, PARAM_NAME[keyname], keyname, arr) );
 		}
 		chk_filter = chk_filter.concat( add_filter(tbl_filter, '出撃制限', 'stage', ['地上', '宇宙']) );
@@ -472,7 +510,7 @@ function updateMSList(update_filter)
 		var sort_arr = ['なし'];
 		for( var i = 0; i < SORT_PARAM.length; ++i )
 			sort_arr.push( PARAM_NAME[ SORT_PARAM[i] ] );
-		for( var i = 0; i < 6; ++i )
+		for( var i = 0; i < SORT_PARAM.length; ++i )
 		{
 			var	row = tbl_sort.insertRow(-1);
 
@@ -526,18 +564,30 @@ function updateMSList(update_filter)
 					var	less = -1;
 					if( filtering_rule.sort[i][1] )
 						less = 1;
-					if( type == 6 )		// Evaluaion value
-						less = - less;
 					if( type == 0 )
 					{	// None
 					}
 					else
 					{
 						var	idx = db_ms.searchColumn( SORT_PARAM[type - 1] );
-						if( rec0[idx] < rec1[idx] )
-							return less;
-						else if( rec0[idx] > rec1[idx] )
-							return - less;
+						if( type == 7 )
+						{	// Melee power
+							var	n0 = MELEE_POWER_PARAM.findIndex( function(x){return x == rec0[idx];} );
+							var	n1 = MELEE_POWER_PARAM.findIndex( function(x){return x == rec1[idx];} );
+							if( n0 < n1 )
+								return less;
+							else if( n0 > n1 )
+								return - less;
+						}
+						else
+						{
+							if( type == 6 )		// Evaluaion value
+								less = - less;
+							if( rec0[idx] < rec1[idx] )
+								return less;
+							else if( rec0[idx] > rec1[idx] )
+								return - less;
+						}
 					}
 				}
 				return 0;
@@ -881,7 +931,7 @@ function restore_filter_parameters()
 		{
 			var	flag = true;
 
-			var	name = chk_filter[i].split( '_' );
+			var	name = split_chk_label( chk_filter[i] );
 			if( name[1] in filtering_rule.filter )
 			{
 				var	vals = filtering_rule.filter[ name[1] ];
