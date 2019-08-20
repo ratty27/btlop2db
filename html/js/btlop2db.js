@@ -1007,6 +1007,7 @@ function update_share_url()
 	var	idx_id = db_ms.searchColumn( 'id' );
 	var	idx_eval = db_ms.searchColumn( 'eval' );
 	var	mod = [ [], [], [], [], [] ];
+	var	maxsz = 0;
 	var maxval = 0;
 	for( var i = 0; i < db_ms.getRecordNum(); ++i )
 	{
@@ -1015,18 +1016,24 @@ function update_share_url()
 		{
 			var	x = db_ms.raw[i][idx_id];
 			if( mod[n].length > 0 )
-				x = x - mod[n][0];
-			if( x < 0 )
 			{
-				console.error( "Error: ID must be sorted." );
-				return;
+				x = x - mod[n][0];
+				if( x < 0 )
+				{
+					console.error( "Error: ID must be sorted." );
+					return;
+				}
+				if( maxval < x )
+					maxval = x;
+			}
+			else
+			{
+				if( maxsz < x )
+					maxsz = x;
 			}
 			mod[n].push( x );
-			if( maxval < x )
-				maxval = x;
 		}
 	}
-	var	maxsz = 0;
 	for( var i = 0; i < mod.length; ++i )
 	{
 		if( maxsz < mod[i].length )
@@ -1035,15 +1042,20 @@ function update_share_url()
 
 	// Write to binary
 	var	bin = new bitstream( 2048 );
-	// - # of bits for writing id
+	// - Calculate bits required
 	var	bits_len = calc_bits_required( maxsz );
 	var	bits_val = calc_bits_required( maxval );
+	// - # of bits for writing id
 	bin.write( (bits_val << 4) | bits_len, 8 );
 	for( var i = 0; i < mod.length; ++i )
 	{
 		var	n = mod[i].length;
+		// write # of IDs
 		bin.write( n, bits_len );
-		for( var j = 0; j < mod[i].length; ++j )
+		// write first ID
+		bin.write( mod[i][0], bits_len );
+		// write IDs
+		for( var j = 1; j < mod[i].length; ++j )
 		{
 			n = mod[i][j];
 			bin.write( n, bits_val );
@@ -1068,11 +1080,16 @@ function update_share_url()
 		var	first = 0;
 		for( var j = 0; j < n; ++j )
 		{
-			var id = bin.read( bits_val );
+			var id;
 			if( j == 0 )
+			{
+				id = bin.read( bits_len );
 				first = id;
+			}
 			else
-				id += first;
+			{
+				id = first + bin.read( bits_val );
+			}
 			var	idx = db_ms.findIndex( idx_id, id );
 			if( idx < 0 )
 			{
@@ -1098,26 +1115,59 @@ function decode_share_url( e )
 	var	idx_id = db_ms.searchColumn( 'id' );
 	var	idx_eval = db_ms.searchColumn( 'eval' );
 
-	bin = decode_base64( e );
-	bits = bin.read( 8 );
+	var	bin = decode_base64( e );
+	var	bits = bin.read( 8 );
 	if( bits == 0 )
 	{
 		console.error( "Decode error: Invalid bits" );
 		return;	
 	}
-	for( var i = 0; i < 5; ++i )
-	{
-		var	n = bin.read( bits );
-		for( var j = 0; j < n; ++j )
+	var	bits_len = bits & 0x0f;
+	var	bits_val = bits >> 4;
+	if( bits_val == 0 )
+	{	// old format
+		for( var i = 0; i < 5; ++i )
 		{
-			var id = bin.read( bits );
-			var	idx = db_ms.findIndex( idx_id, id );
-			if( idx < 0 )
+			var	n = bin.read( bits );
+			for( var j = 0; j < n; ++j )
 			{
-				console.error( 'Failed to read ID' );
-				return;
+				var id = bin.read( bits );
+				var	idx = db_ms.findIndex( idx_id, id );
+				if( idx < 0 )
+				{
+					console.error( 'Failed to read ID' );
+					return;
+				}
+				db_ms.raw[idx][idx_eval] = i;
 			}
-			db_ms.raw[idx][idx_eval] = i;
+		}
+	}
+	else
+	{
+		for( var i = 0; i < 5; ++i )
+		{
+			var	n = bin.read( bits_len );
+			var	first = 0;
+			for( var j = 0; j < n; ++j )
+			{
+				var id;
+				if( j == 0 )
+				{
+					id = bin.read( bits_len );
+					first = id;
+				}
+				else
+				{
+					id = first + bin.read( bits_val );
+				}
+				var	idx = db_ms.findIndex( idx_id, id );
+				if( idx < 0 )
+				{
+					console.error( 'Failed to read ID' );
+					return;
+				}
+				db_ms.raw[idx][idx_eval] = i;
+			}
 		}
 	}
 }
