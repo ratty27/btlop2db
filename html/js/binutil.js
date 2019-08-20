@@ -120,3 +120,13 @@ function decode_base64( code )
 	}
 	return bin;
 }
+
+// ---------
+/**	@brief	Calculate bits required
+ *	@param	n		Number
+ *	@return	Bits required
+ */
+function calc_bits_required( n )
+{
+	return Math.floor( Math.log2(n) + 1 );
+}

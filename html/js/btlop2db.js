@@ -1007,26 +1007,46 @@ function update_share_url()
 	var	idx_id = db_ms.searchColumn( 'id' );
 	var	idx_eval = db_ms.searchColumn( 'eval' );
 	var	mod = [ [], [], [], [], [] ];
+	var maxval = 0;
 	for( var i = 0; i < db_ms.getRecordNum(); ++i )
 	{
 		var	n = db_ms.raw[i][idx_eval];
 		if( n < DEFAULT_EVALUATION )
-			mod[n].push( db_ms.raw[i][idx_id] );
+		{
+			var	x = db_ms.raw[i][idx_id];
+			if( mod[n].length > 0 )
+				x = x - mod[n][0];
+			if( x < 0 )
+			{
+				console.error( "Error: ID must be sorted." );
+				return;
+			}
+			mod[n].push( x );
+			if( maxval < x )
+				maxval = x;
+		}
+	}
+	var	maxsz = 0;
+	for( var i = 0; i < mod.length; ++i )
+	{
+		if( maxsz < mod[i].length )
+			maxsz = mod[i].length;
 	}
 
 	// Write to binary
 	var	bin = new bitstream( 2048 );
 	// - # of bits for writing id
-	var	bits = 10;
-	bin.write( bits, 8 );
+	var	bits_len = calc_bits_required( maxsz );
+	var	bits_val = calc_bits_required( maxval );
+	bin.write( (bits_val << 4) | bits_len, 8 );
 	for( var i = 0; i < mod.length; ++i )
 	{
 		var	n = mod[i].length;
-		bin.write( n, bits );
+		bin.write( n, bits_len );
 		for( var j = 0; j < mod[i].length; ++j )
 		{
 			n = mod[i][j];
-			bin.write( n, bits );
+			bin.write( n, bits_val );
 		}
 	}
 	// - Encode to text
@@ -1040,17 +1060,19 @@ function update_share_url()
 	// Verify
 /*	bin = decode_base64( code );
 	bits = bin.read( 8 );
-	if( bits != 10 )
-	{
-		console.error( 'Invalid bits' );
-		return;
-	}
+	bits_len = bits & 0x0f;
+	bits_val = bits >> 4;
 	for( var i = 0; i < mod.length; ++i )
 	{
-		var	n = bin.read( bits );
+		var	n = bin.read( bits_len );
+		var	first = 0;
 		for( var j = 0; j < n; ++j )
 		{
-			var id = bin.read( bits );
+			var id = bin.read( bits_val );
+			if( j == 0 )
+				first = id;
+			else
+				id += first;
 			var	idx = db_ms.findIndex( idx_id, id );
 			if( idx < 0 )
 			{
