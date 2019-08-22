@@ -157,7 +157,7 @@ def update_sub_items(sheet, items, levels):
 			else:
 				level = sheet.cell( row=i0, column=level_col ).value
 				if type(level) is str or type(level) is float:
-					level = init(level)
+					level = int(level)
 				elif type(level) is not int:
 					level = 1
 				if level > item_list[i1][2]:
@@ -167,15 +167,16 @@ def update_sub_items(sheet, items, levels):
 				else:
 					less = None
 		if less is None:
-			pass
-		elif less:
+			i0 += 1
+			i1 += 1
+		elif not less:
 			sheet.insert_rows( i0 )
 			sheet.cell( row=i0, column=body_col, value=item_list[i1][0] )
 			sheet.cell( row=i0, column=name_col, value=item_list[i1][1] )
 			sheet.cell( row=i0, column=level_col, value=item_list[i1][2] )
 			i0 += 1
 			i1 += 1
-		elif not less:
+		elif less:
 			i0 += 1
 		else:
 			i0 += 1
