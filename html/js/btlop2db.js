@@ -690,7 +690,8 @@ function updateMSList(update_filter)
 		{
 			var idx_exp = db_skill.searchColumn( 'explanation' );
 			var	first_span = 2;
-			var	span = Math.floor((cidx0.length - first_span) / (cidx1.length - 1));
+			var line1_columns = cidx0.length + 1;
+			var	span = Math.floor((line1_columns - first_span) / (cidx1.length - 1));
 			var	num = 0;
 			row = tbl.insertRow(-1);
 			for( var j = 0; j < cidx1.length; ++j )
@@ -724,7 +725,7 @@ function updateMSList(update_filter)
 				}
 				else if( j == cidx1.length - 1 )
 				{
-					cell.colSpan = '' + (cidx0.length - num);
+					cell.colSpan = '' + (line1_columns - num);
 				}
 				else
 				{
