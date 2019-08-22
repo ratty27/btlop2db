@@ -46,10 +46,10 @@ var	DEFAULT_EVALUATION = 5;
 var KEYNAME_PRESET_LIST = '__btlop2db_preset_list__';
 var KEYNAME_USER_EVAL = '__btlop2db_user_eval__';
 
-var HASH_MS_CSV = '1'
-var HASH_WEAPON1_CSV = '0'
-var HASH_WEAPON2_CSV = '0'
-var HASH_SKILL_CSV = '0'
+var HASH_MS_CSV = '2'
+var HASH_WEAPON1_CSV = '2'
+var HASH_WEAPON2_CSV = '2'
+var HASH_SKILL_CSV = '2'
 
 // ---------
 // Variables
