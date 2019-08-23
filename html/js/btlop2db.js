@@ -225,6 +225,7 @@ function apply_filters()
 	filtering_rule.sort = [];
 
 	// Filter
+	var	availables = {};
 	for( var i = 0; i < chk_filter.length; ++i )
 	{
 		var	chk = document.getElementById( chk_filter[i] );
@@ -235,12 +236,23 @@ function apply_filters()
 		}
 
 		var	name = split_chk_label( chk_filter[i] );
-		if( typeof filtering_rule.filter[name[1]] != 'object' )
-			filtering_rule.filter[name[1]] = []
-		if( chk.checked )
+		var	type = name[1];
+		if( !(type in filtering_rule.filter) )
 		{
-			filtering_rule.filter[name[1]].push( name[2] );
+			filtering_rule.filter[type] = []
+			availables[type] = false;
 		}
+		if( chk.checked )
+			filtering_rule.filter[type].push( name[2] );
+		else
+			availables[type] = true;
+	}
+	// Delete filter type if all items are checked in a category
+	console.log( "---" );
+	for( var type in availables )
+	{
+		if( !availables[type] )
+			delete filtering_rule.filter[type];
 	}
 
 	// Sort
