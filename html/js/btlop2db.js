@@ -46,16 +46,12 @@ var	DEFAULT_EVALUATION = 5;
 var KEYNAME_PRESET_LIST = '__btlop2db_preset_list__';
 var KEYNAME_USER_EVAL = '__btlop2db_user_eval__';
 
-var HASH_MS_CSV = '3'
-var HASH_WEAPON1_CSV = '3'
-var HASH_WEAPON2_CSV = '3'
-var HASH_SKILL_CSV = '3'
-
 // ---------
 // Variables
 var	db_ms = null;
 var	db_weapon1 = null;
 var	db_weapon2 = null;
+var db_subweapon = null;
 var	db_skill = null;
 var chk_filter = null;
 var sel_sort = null;
@@ -162,6 +158,115 @@ function init_ms_db()
 }
 
 // ---------
+/**	@brief	Get weapon parameter at text
+ */
+function get_weapon_param( db, name, level, body )
+{
+	if( body )
+		db = db.filter( 'body', body );
+	db = db.filter( 'name', name );
+	if( !db )
+		return 'no data';
+	if( db.getRecordNum() == 0 )
+		return 'no data';
+
+	var	rec;
+	var	idx_level = db.searchColumn( 'level' );
+	if( idx_level >= 0 && db.getRecordNum() > 1 )
+	{
+		db = db.sort( idx_level );
+		var	idx = 0;
+		for( var i = 1; i < db.getRecordNum(); ++i )
+		{
+			if( db.raw[i][idx_level] > level )
+			{
+				break;
+			}
+			else if( db.raw[i][idx_level] == level )
+			{
+				idx = i;
+				break;
+			}
+			else if( db.raw[i][idx_level] > db.raw[idx][idx_level] )
+			{
+				idx = i;
+			}
+		}
+		rec = db.raw[idx];
+	}
+	else
+	{
+		rec = db.raw[0];
+	}
+
+	var	idx_type = db.searchColumn( 'type' );
+	var	type;
+	if( idx_type < 0 )
+		type = 'melee';
+	else
+		type = rec[idx_type];
+	if( type == 'other' )
+	{	// Note: Overwrite 'type' for displaying.
+		//       Don't show this 'type' directly, that is not correct.
+		if( name.indexOf('グレネード') >= 0
+		 || name.indexOf('クナイ') >= 0
+		 || name.indexOf('ハイドボンブ') >= 0
+		 || name.indexOf('クラッカー') >= 0
+		 || name.indexOf('ポッド') >= 0
+		 || name.indexOf('閃光弾') >= 0
+		 || name.indexOf('ミサイル') >= 0
+		 || name.indexOf('爆雷') >= 0 )
+		{
+			type = 'ammo';
+		}
+		else if( name.indexOf('ビーム') >= 0 )
+		{
+			type = 'beam';
+		}
+	}
+
+	var	idx_power = db.searchColumn( 'power' );
+	var	idx_range = db.searchColumn( 'range' );
+	var	idx_limit = db.searchColumn( 'ammo/heat_rate' );
+
+	var	ret;
+	if( type == 'beam' )
+	{
+		ret =  '威力: ' + rec[idx_power] + '\n';
+		ret += '射程距離: ' + rec[idx_range] + '\n';
+		ret += 'ヒート率: ' + rec[idx_limit];
+	}
+	else if( type == 'ammo' )
+	{
+		ret =  '威力: ' + rec[idx_power] + '\n';
+		ret += '射程距離: ' + rec[idx_range] + '\n';
+		ret += '弾数: ' + rec[idx_limit];
+	}
+	else if( type == 'melee' )
+	{
+		ret =  '威力: ' + rec[idx_power];
+	}
+	else if( type == 'shield' )
+	{
+		ret =  'ＨＰ: ' + rec[idx_power] + "\n";
+		ret += 'サイズ: ' + rec[idx_range];
+	}
+	else
+	{
+		ret = 'no data';
+	}
+	return ret;
+}
+
+// ---------
+/**	@brief	Create displaying item for weapon
+ */
+function create_disp_weapon( db, name, level, body )
+{
+	return '<span title="' + get_weapon_param(db, name, level, body) + '">' + name + '</span>';
+}
+
+// ---------
 /**	@brief	Add filter check-boxs
  */
 function add_filter(tbl, name, id_, arr)
@@ -225,6 +330,7 @@ function apply_filters()
 	filtering_rule.sort = [];
 
 	// Filter
+	var	availables = {};
 	for( var i = 0; i < chk_filter.length; ++i )
 	{
 		var	chk = document.getElementById( chk_filter[i] );
@@ -235,12 +341,23 @@ function apply_filters()
 		}
 
 		var	name = split_chk_label( chk_filter[i] );
-		if( typeof filtering_rule.filter[name[1]] != 'object' )
-			filtering_rule.filter[name[1]] = []
-		if( chk.checked )
+		var	type = name[1];
+		if( !(type in filtering_rule.filter) )
 		{
-			filtering_rule.filter[name[1]].push( name[2] );
+			filtering_rule.filter[type] = []
+			availables[type] = false;
 		}
+		if( chk.checked )
+			filtering_rule.filter[type].push( name[2] );
+		else
+			availables[type] = true;
+	}
+	// Delete filter type if all items are checked in a category
+	console.log( "---" );
+	for( var type in availables )
+	{
+		if( !availables[type] )
+			delete filtering_rule.filter[type];
 	}
 
 	// Sort
@@ -263,7 +380,6 @@ function apply_filters()
 
 // ---------
 /**	@brief	Check whether record is showing
- *	@todo	Skip if all filters are selected...
  */
 function filter_ms(record)
 {
@@ -608,9 +724,15 @@ function updateMSList(update_filter)
 			cidx0.push( idx );
 	}
 	var idx_id = db.searchColumn( 'id' );
+	var idx_level = db.searchColumn( 'level' );
+	var idx_name = db.searchColumn( 'name' );
 	var idx_type = db.searchColumn( 'type' );
+	var idx_weapon1 = db.searchColumn( 'main_weapon1' );
+	var idx_weapon2 = db.searchColumn( 'main_weapon2' );
+	var idx_subweapon = db.searchColumn( 'sub_weapon' );
 	var idx_skills = db.searchColumn( 'skills' );
 	var idx_eval = db.searchColumn( 'eval' );
+	var idx_weapon1_sub = db_weapon1.searchColumn( 'sub_weapon' );
 
 	// Create table
 	var PERIOD_HEADER = 15;
@@ -671,7 +793,10 @@ function updateMSList(update_filter)
 			var	text = db.raw[i][cidx0[j]];
 			if( typeof text == 'string' )
 			{
-				text = text.replace( /\n/g, '<br>' );
+				if( cidx0[j] == idx_name )
+					text = text.replace( /\n/g, ' ' );
+				else
+					text = text.replace( /\n/g, '<br>' );
 				if( j != 0 )
 					cell.style.textAlign = 'center'
 			}
@@ -686,25 +811,60 @@ function updateMSList(update_filter)
 		}
 
 		// Parameters - line 2
+		var	first_span = 2;
+		var line1_columns = cidx0.length + 1;
+		var	span = Math.floor((line1_columns - first_span) / (cidx1.length - 1));
+		var	withsub = [];
 		if( filtering_rule.show_detail && cidx1.length > 0 )
 		{
 			var idx_exp = db_skill.searchColumn( 'explanation' );
-			var	first_span = 2;
-			var line1_columns = cidx0.length + 1;
-			var	span = Math.floor((line1_columns - first_span) / (cidx1.length - 1));
 			var	num = 0;
 			row = tbl.insertRow(-1);
 			for( var j = 0; j < cidx1.length; ++j )
 			{
 				var	text = db.raw[i][cidx1[j]];
-				if( cidx1[j] == idx_skills )
+				if( cidx1[j] == idx_weapon1 )
+				{
+					var	weapons = text.split( '\n' );
+					var	single = [];
+					for( var k = 0; k < weapons.length; ++k )
+					{
+						var weapon_name = weapons[k];
+						if( weapon_name == '' )
+							continue;
+						var	weapon_idx = db_weapon1.findIndex( 'name', weapon_name );
+						if( weapon_idx >= 0 )
+						{
+							var	sub_weapon = db_weapon1.raw[weapon_idx][idx_weapon1_sub];
+							if( sub_weapon != '' )
+							{
+								withsub.push( [weapon_name, sub_weapon] );
+								continue;
+							}
+						}
+						single.push( create_disp_weapon(db_weapon1, weapon_name, db.raw[i][idx_level]) );
+					}
+					text = single.join( '<br>' );
+				}
+				else if( cidx1[j] == idx_skills )
 				{
 					var	skills = text.split( '\n' )
 					text = '<table border=0 width="100%" style="box-shadow: none;">'
 					for( var k = 0; k < skills.length; ++k )
 					{
+						if( skills[k] == '' )
+							continue;
 						var tips_idx = db_skill.findIndex( 'name', skills[k] );
-						var tips = db_skill.raw[tips_idx][idx_exp];
+						var	tips;
+						if( tips_idx < 0 )
+						{
+							console.error( 'Error: "' + skills[k] + '" is not found' );
+							tips = '';
+						}
+						else
+						{
+							tips = db_skill.raw[tips_idx][idx_exp];
+						}
 						text += '<tr><td class="skill_la"><span title="' + tips + '">' + skills[k].slice(0, -3) + '</span></td>';
 						text += '<td class="skill_ra">' + skills[k].slice(-3) + '</td></tr>';
 					}
@@ -712,7 +872,21 @@ function updateMSList(update_filter)
 				}
 				else if( typeof text == 'string' )
 				{
-					text = text.replace( /\n/g, '<br>' );
+					//text = text.replace( /\n/g, '<br>' );
+					var	weapons = text.split( '\n' );
+					var	out = [];
+					for( var k = 0; k < weapons.length; ++k )
+					{
+						var	item;
+						if( cidx1[j] == idx_weapon2 )
+							item = create_disp_weapon( db_weapon2, weapons[k], db.raw[i][idx_level] );
+						else if( cidx1[j] == idx_subweapon )
+							item = create_disp_weapon( db_subweapon, weapons[k], db.raw[i][idx_level], db.raw[i][idx_name] );
+						else
+							item = weapons[k];
+						out.push( item );
+					}
+					text = out.join( '<br>' );
 				}
 
 				var	cell = row.insertCell(-1);
@@ -731,6 +905,47 @@ function updateMSList(update_filter)
 				{
 					cell.colSpan = '' + span;
 					num += span;
+				}
+				if( (cidx1[j] == idx_weapon2 || cidx1[j] == idx_skills) && withsub.length > 0 )
+				{
+					var	num = withsub.length + 1;
+					cell.rowSpan = '' + num;
+				}
+			}
+		}
+
+		// Parameters - line 3
+		if( withsub.length > 0 )
+		{
+			var	num = 0;
+			for( var k = 0; k < withsub.length; ++k )
+			{
+				row = tbl.insertRow(-1);
+				for( var j = 0; j < cidx1.length; ++j )
+				{
+					if( cidx1[j] == idx_weapon2 )
+						continue;
+
+					var	cell = row.insertCell(-1);
+					cell.style.fontSize = 'small';
+					if( cidx1[j] == idx_weapon1 )
+						cell.innerHTML = create_disp_weapon( db_weapon1, withsub[k][0], db.raw[i][idx_level] );
+					else if( cidx1[j] == idx_subweapon )
+						cell.innerHTML = create_disp_weapon( db_subweapon, withsub[k][1], db.raw[i][idx_level], withsub[k][0] );
+					if( j == 0 )
+					{
+						cell.colSpan = '' + first_span;
+						num += first_span;
+					}
+					else if( j == cidx1.length - 1 )
+					{
+						cell.colSpan = '' + (line1_columns - num);
+					}
+					else
+					{
+						cell.colSpan = '' + span;
+						num += span;
+					}
 				}
 			}
 		}
@@ -821,14 +1036,16 @@ function init()
 		}
 	}
 
-	var	recv_ms = function(x) { db_ms = csv_to_db(x); init_ms_db(); updateMSList(true); }
-	var	recv_weapon1 = function(x) { db_weapon1 = csv_to_db(x); updateMSList(true); }
-	var	recv_weapon2 = function(x) { db_weapon2 = csv_to_db(x); updateMSList(true); }
-	var	recv_skill = function(x) { db_skill = csv_to_db(x); updateMSList(true); }
-	read_file( "db/btlop2_MS.csv?v=" + HASH_MS_CSV, recv_ms );
-	read_file( "db/btlop2_Weapon1.csv?v=" + HASH_WEAPON1_CSV, recv_weapon1 );
-	read_file( "db/btlop2_Weapon2.csv?v=" + HASH_WEAPON2_CSV, recv_weapon2 );
-	read_file( "db/btlop2_Skill.csv?v=" + HASH_SKILL_CSV, recv_skill );
+	var	recv_ms = function(x)        { db_ms = csv_to_db(x);        db_ms.sort('id'); init_ms_db(); updateMSList(true); }
+	var	recv_weapon1 = function(x)   { db_weapon1 = csv_to_db(x);   db_weapon1.sort('name');        updateMSList(true); }
+	var	recv_weapon2 = function(x)   { db_weapon2 = csv_to_db(x);   db_weapon2.sort('name');        updateMSList(true); }
+	var	recv_subweapon = function(x) { db_subweapon = csv_to_db(x); db_subweapon.sort('body');      updateMSList(true); }
+	var	recv_skill = function(x)   { db_skill = csv_to_db(x);       db_skill.sort('name');          updateMSList(true); }
+	read_file( "db/btlop2_MS.csv?v=0", recv_ms );
+	read_file( "db/btlop2_Weapon1.csv?v=0", recv_weapon1 );
+	read_file( "db/btlop2_Weapon2.csv?v=0", recv_weapon2 );
+	read_file( "db/btlop2_SubWeapon.csv?v=0", recv_subweapon );
+	read_file( "db/btlop2_Skill.csv?v=0", recv_skill );
 
 	document.getElementById('btlop2dbtitle').href = get_current_url();
 

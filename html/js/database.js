@@ -14,6 +14,7 @@ class Database
 	{
 		this.columns = null;
 		this.raw = null;
+		this.idx_sorted = -1;
 	}
 
 	//!	@brief	Set columns name
@@ -85,13 +86,36 @@ class Database
 	}
 
 	//!	@brief	Filter by user' rule
-	filter(rule)
+	filter(rule, key)
 	{
 		var	arr = [];
-		for( var i = 0; i < this.raw.length; ++i )
-		{
-			if( rule(this.raw[i]) )
-				arr.push( this.raw[i] );
+		if( !key )
+		{	// Filter by user's function
+			for( var i = 0; i < this.raw.length; ++i )
+			{
+				if( rule(this.raw[i]) )
+					arr.push( this.raw[i] );
+			}
+		}
+		else
+		{	// Collect items those are contains 'key'.
+			var	idx_column;
+			if( typeof rule == 'string' )
+				idx_column = this.searchColumn( rule );
+			else if( typeof rule == 'number' )
+				idx_column = rule;
+			else
+				return null;	// error
+			var	idx = this.findIndex( idx_column, key );
+			if( idx >= 0 )
+			{
+				for( var i = idx; i < this.getRecordNum(); ++i )
+				{
+					if( this.raw[i][idx_column] != key )
+						break;
+					arr.push( this.raw[i] );
+				}
+			}
 		}
 		var	ret = new Database();
 		ret.setColumns( this.columns );
@@ -102,7 +126,38 @@ class Database
 	//!	@brief	Sort by user's rule
 	sort(rule)
 	{
-		var	arr = this.raw.sort( rule );
+		var	func;
+		if( typeof rule == 'string' )
+		{
+			var	idx = this.searchColumn( rule );
+			if( idx < 0 )
+			{
+				console.error( "Error: Invalid column name : " + rule );
+				return;
+			}
+			rule = idx;
+		}
+		if( typeof rule == 'number' )
+		{
+			var	idx = rule;
+			func = function(a, b)
+				{
+					if( a[idx] < b[idx] )
+						return -1;
+					else if( a[idx] > b[idx] )
+						return 1;
+					else
+						return 0;
+				};
+			this.idx_sorted = idx;
+		}
+		else
+		{
+			func = rule;
+			this.idx_sorted = -1;
+		}
+
+		var	arr = this.raw.sort( func );
 		var	ret = new Database();
 		ret.setColumns( this.columns );
 		ret.setRaw( arr );
@@ -115,10 +170,36 @@ class Database
 		var	idx = key;
 		if( typeof idx == 'string' )
 			idx = this.searchColumn( idx );
-		for( var i = 0; i < this.raw.length; ++i )
-		{
-			if( this.raw[i][idx] == val )
-				return i;
+		if( this.idx_sorted == idx )
+		{	// Binary search if sorted by specify key
+			var	idx0 = 0;
+			var idx1 = this.raw.length;
+			while( idx0 < idx1 )
+			{
+				var	idx2 = Math.floor( (idx0 + idx1) / 2 );
+				if( val < this.raw[idx2][idx] )
+					idx1 = idx2;
+				else if( val > this.raw[idx2][idx] )
+					idx0 = idx2 + 1;
+				else
+				{
+					while( idx2 > 0 )
+					{
+						idx2 -= 1;
+						if( this.raw[idx2][idx] != val )
+							return idx2 + 1;
+					}
+					return idx2;
+				}
+			}
+		}
+		else
+		{	// Sequential search
+			for( var i = 0; i < this.raw.length; ++i )
+			{
+				if( this.raw[i][idx] == val )
+					return i;
+			}
 		}
 		return -1;
 	}

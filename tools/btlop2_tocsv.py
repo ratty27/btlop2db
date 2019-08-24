@@ -9,14 +9,15 @@ import	xlrd
 
 # ----------------------------------------------------------------------
 #	Constants
-SHEETNAME_MS      = 'MS'
-SHEETNAME_WEAPON1 = 'Weapon1'
-SHEETNAME_WEAPON2 = 'Weapon2'
-SHEETNAME_SKILL   = 'Skill'
+SHEETNAME_MS        = 'MS';
+SHEETNAME_WEAPON1   = 'Weapon1';
+SHEETNAME_WEAPON2   = 'Weapon2';
+SHEETNAME_SUBWEAPON = 'SubWeapon';
+SHEETNAME_SKILL     = 'Skill';
 
 # ----------------------------------------------------------------------
 ##	@brief	Output as csv
-def output_csv(book, sheet_name, basename):
+def output_csv(book, sheet_name, basename, idx_validation):
 	sheet = book.sheet_by_name( sheet_name )
 	outname = basename + "_" + sheet_name + ".csv"
 	with open(outname, mode='w', encoding='utf-8') as outfile:
@@ -48,7 +49,8 @@ def output_csv(book, sheet_name, basename):
 				else:
 					arr.append( '' )
 				i += 1
-			outfile.write( ','.join(arr) + '\n' )
+			if arr[idx_validation] != '""':
+				outfile.write( ','.join(arr) + '\n' )
 			j += 1
 
 # ----------------------------------------------------------------------
@@ -71,9 +73,10 @@ if argc >= 3:
 	basename = os.path.join( argv[2], os.path.basename(basename) );
 
 book = xlrd.open_workbook( filename )
-output_csv( book, SHEETNAME_MS, basename )
-output_csv( book, SHEETNAME_WEAPON1, basename )
-output_csv( book, SHEETNAME_WEAPON2, basename )
-output_csv( book, SHEETNAME_SKILL, basename )
+output_csv( book, SHEETNAME_MS, basename, 1 )
+output_csv( book, SHEETNAME_WEAPON1, basename, 0 )
+output_csv( book, SHEETNAME_WEAPON2, basename, 0 )
+output_csv( book, SHEETNAME_SUBWEAPON, basename, 1 )
+output_csv( book, SHEETNAME_SKILL, basename, 0 )
 
 sys.exit( 0 )
