@@ -46,16 +46,18 @@ var	DEFAULT_EVALUATION = 5;
 var KEYNAME_PRESET_LIST = '__btlop2db_preset_list__';
 var KEYNAME_USER_EVAL = '__btlop2db_user_eval__';
 
-var HASH_MS_CSV = '0'
-var HASH_WEAPON1_CSV = '0'
-var HASH_WEAPON2_CSV = '0'
-var HASH_SKILL_CSV = '0'
+var HASH_MS_CSV = '0';
+var HASH_WEAPON1_CSV = '0';
+var HASH_WEAPON2_CSV = '0';
+var HASH_SUBWEAPON_CSV = '0';
+var HASH_SKILL_CSV = '0';
 
 // ---------
 // Variables
 var	db_ms = null;
 var	db_weapon1 = null;
 var	db_weapon2 = null;
+var db_subweapon = null;
 var	db_skill = null;
 var chk_filter = null;
 var sel_sort = null;
@@ -159,6 +161,115 @@ function init_ms_db()
 		decode_share_url( args['e'] );
 	else
 		load_evaluation();
+}
+
+// ---------
+/**	@brief	Get weapon parameter at text
+ */
+function get_weapon_param( db, name, level, body )
+{
+	if( body )
+		db = db.filter( 'body', body );
+	db = db.filter( 'name', name );
+	if( !db )
+		return 'no data';
+	if( db.getRecordNum() == 0 )
+		return 'no data';
+
+	var	rec;
+	var	idx_level = db.searchColumn( 'level' );
+	if( idx_level >= 0 && db.getRecordNum() > 1 )
+	{
+		db = db.sort( idx_level );
+		var	idx = 0;
+		for( var i = 1; i < db.getRecordNum(); ++i )
+		{
+			if( db.raw[i][idx_level] > level )
+			{
+				break;
+			}
+			else if( db.raw[i][idx_level] == level )
+			{
+				idx = i;
+				break;
+			}
+			else if( db.raw[i][idx_level] > db.raw[idx][idx_level] )
+			{
+				idx = i;
+			}
+		}
+		rec = db.raw[idx];
+	}
+	else
+	{
+		rec = db.raw[0];
+	}
+
+	var	idx_type = db.searchColumn( 'type' );
+	var	type;
+	if( idx_type < 0 )
+		type = 'melee';
+	else
+		type = rec[idx_type];
+	if( type == 'other' )
+	{	// Note: Overwrite 'type' for displaying.
+		//       Don't show this 'type' directly, that is not correct.
+		if( name.indexOf('グレネード') >= 0
+		 || name.indexOf('クナイ') >= 0
+		 || name.indexOf('ハイドボンブ') >= 0
+		 || name.indexOf('クラッカー') >= 0
+		 || name.indexOf('ポッド') >= 0
+		 || name.indexOf('閃光弾') >= 0
+		 || name.indexOf('ミサイル') >= 0
+		 || name.indexOf('爆雷') >= 0 )
+		{
+			type = 'ammo';
+		}
+		else if( name.indexOf('ビーム') >= 0 )
+		{
+			type = 'beam';
+		}
+	}
+
+	var	idx_power = db.searchColumn( 'power' );
+	var	idx_range = db.searchColumn( 'range' );
+	var	idx_limit = db.searchColumn( 'ammo/heat_rate' );
+
+	var	ret;
+	if( type == 'beam' )
+	{
+		ret =  '威力: ' + rec[idx_power] + '\n';
+		ret += '射程距離: ' + rec[idx_range] + '\n';
+		ret += 'ヒート率: ' + rec[idx_limit];
+	}
+	else if( type == 'ammo' )
+	{
+		ret =  '威力: ' + rec[idx_power] + '\n';
+		ret += '射程距離: ' + rec[idx_range] + '\n';
+		ret += '弾数: ' + rec[idx_limit];
+	}
+	else if( type == 'melee' )
+	{
+		ret =  '威力: ' + rec[idx_power];
+	}
+	else if( type == 'shield' )
+	{
+		ret =  'ＨＰ: ' + rec[idx_power] + "\n";
+		ret += 'サイズ: ' + rec[idx_range];
+	}
+	else
+	{
+		ret = 'no data';
+	}
+	return ret;
+}
+
+// ---------
+/**	@brief	Create displaying item for weapon
+ */
+function create_disp_weapon( db, name, level, body )
+{
+	return '<span title="' + get_weapon_param(db, name, level, body) + '">' + name + '</span>';
 }
 
 // ---------
@@ -275,7 +386,6 @@ function apply_filters()
 
 // ---------
 /**	@brief	Check whether record is showing
- *	@todo	Skip if all filters are selected...
  */
 function filter_ms(record)
 {
@@ -620,6 +730,7 @@ function updateMSList(update_filter)
 			cidx0.push( idx );
 	}
 	var idx_id = db.searchColumn( 'id' );
+	var idx_level = db.searchColumn( 'level' );
 	var idx_name = db.searchColumn( 'name' );
 	var idx_type = db.searchColumn( 'type' );
 	var idx_weapon1 = db.searchColumn( 'main_weapon1' );
@@ -737,7 +848,7 @@ function updateMSList(update_filter)
 								continue;
 							}
 						}
-						single.push( weapon_name );
+						single.push( create_disp_weapon(db_weapon1, weapon_name, db.raw[i][idx_level]) );
 					}
 					text = single.join( '<br>' );
 				}
@@ -767,7 +878,21 @@ function updateMSList(update_filter)
 				}
 				else if( typeof text == 'string' )
 				{
-					text = text.replace( /\n/g, '<br>' );
+					//text = text.replace( /\n/g, '<br>' );
+					var	weapons = text.split( '\n' );
+					var	out = [];
+					for( var k = 0; k < weapons.length; ++k )
+					{
+						var	item;
+						if( cidx1[j] == idx_weapon2 )
+							item = create_disp_weapon( db_weapon2, weapons[k], db.raw[i][idx_level] );
+						else if( cidx1[j] == idx_subweapon )
+							item = create_disp_weapon( db_subweapon, weapons[k], db.raw[i][idx_level], db.raw[i][idx_name] );
+						else
+							item = weapons[k];
+						out.push( item );
+					}
+					text = out.join( '<br>' );
 				}
 
 				var	cell = row.insertCell(-1);
@@ -810,9 +935,9 @@ function updateMSList(update_filter)
 					var	cell = row.insertCell(-1);
 					cell.style.fontSize = 'small';
 					if( cidx1[j] == idx_weapon1 )
-						cell.innerHTML = withsub[k][0];
+						cell.innerHTML = create_disp_weapon( db_weapon1, withsub[k][0], db.raw[i][idx_level] );
 					else if( cidx1[j] == idx_subweapon )
-						cell.innerHTML = withsub[k][1];
+						cell.innerHTML = create_disp_weapon( db_subweapon, withsub[k][1], db.raw[i][idx_level], withsub[k][0] );
 					if( j == 0 )
 					{
 						cell.colSpan = '' + first_span;
@@ -917,13 +1042,15 @@ function init()
 		}
 	}
 
-	var	recv_ms = function(x)      { db_ms = csv_to_db(x);      db_ms.sort('id'); init_ms_db(); updateMSList(true); }
-	var	recv_weapon1 = function(x) { db_weapon1 = csv_to_db(x); db_weapon1.sort('name'); updateMSList(true); }
-	var	recv_weapon2 = function(x) { db_weapon2 = csv_to_db(x); db_weapon2.sort('name'); updateMSList(true); }
-	var	recv_skill = function(x)   { db_skill = csv_to_db(x);   db_skill.sort('name'); updateMSList(true); }
+	var	recv_ms = function(x)        { db_ms = csv_to_db(x);        db_ms.sort('id'); init_ms_db(); updateMSList(true); }
+	var	recv_weapon1 = function(x)   { db_weapon1 = csv_to_db(x);   db_weapon1.sort('name');        updateMSList(true); }
+	var	recv_weapon2 = function(x)   { db_weapon2 = csv_to_db(x);   db_weapon2.sort('name');        updateMSList(true); }
+	var	recv_subweapon = function(x) { db_subweapon = csv_to_db(x); db_subweapon.sort('body');      updateMSList(true); }
+	var	recv_skill = function(x)   { db_skill = csv_to_db(x);       db_skill.sort('name');          updateMSList(true); }
 	read_file( "db/btlop2_MS.csv?v=" + HASH_MS_CSV, recv_ms );
 	read_file( "db/btlop2_Weapon1.csv?v=" + HASH_WEAPON1_CSV, recv_weapon1 );
 	read_file( "db/btlop2_Weapon2.csv?v=" + HASH_WEAPON2_CSV, recv_weapon2 );
+	read_file( "db/btlop2_SubWeapon.csv?v=" + HASH_SUBWEAPON_CSV, recv_subweapon );
 	read_file( "db/btlop2_Skill.csv?v=" + HASH_SKILL_CSV, recv_skill );
 
 	document.getElementById('btlop2dbtitle').href = get_current_url();

@@ -86,13 +86,36 @@ class Database
 	}
 
 	//!	@brief	Filter by user' rule
-	filter(rule)
+	filter(rule, key)
 	{
 		var	arr = [];
-		for( var i = 0; i < this.raw.length; ++i )
-		{
-			if( rule(this.raw[i]) )
-				arr.push( this.raw[i] );
+		if( !key )
+		{	// Filter by user's function
+			for( var i = 0; i < this.raw.length; ++i )
+			{
+				if( rule(this.raw[i]) )
+					arr.push( this.raw[i] );
+			}
+		}
+		else
+		{	// Collect items those are contains 'key'.
+			var	idx_column;
+			if( typeof rule == 'string' )
+				idx_column = this.searchColumn( rule );
+			else if( typeof rule == 'number' )
+				idx_column = rule;
+			else
+				return null;	// error
+			var	idx = this.findIndex( idx_column, key );
+			if( idx >= 0 )
+			{
+				for( var i = idx; i < this.getRecordNum(); ++i )
+				{
+					if( this.raw[i][idx_column] != key )
+						break;
+					arr.push( this.raw[i] );
+				}
+			}
 		}
 		var	ret = new Database();
 		ret.setColumns( this.columns );
@@ -148,7 +171,7 @@ class Database
 		if( typeof idx == 'string' )
 			idx = this.searchColumn( idx );
 		if( this.idx_sorted == idx )
-		{	// Binary search
+		{	// Binary search if sorted by specify key
 			var	idx0 = 0;
 			var idx1 = this.raw.length;
 			while( idx0 < idx1 )
