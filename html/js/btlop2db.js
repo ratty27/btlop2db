@@ -225,6 +225,7 @@ function apply_filters()
 	filtering_rule.sort = [];
 
 	// Filter
+	var	availables = {};
 	for( var i = 0; i < chk_filter.length; ++i )
 	{
 		var	chk = document.getElementById( chk_filter[i] );
@@ -235,12 +236,23 @@ function apply_filters()
 		}
 
 		var	name = split_chk_label( chk_filter[i] );
-		if( typeof filtering_rule.filter[name[1]] != 'object' )
-			filtering_rule.filter[name[1]] = []
-		if( chk.checked )
+		var	type = name[1];
+		if( !(type in filtering_rule.filter) )
 		{
-			filtering_rule.filter[name[1]].push( name[2] );
+			filtering_rule.filter[type] = []
+			availables[type] = false;
 		}
+		if( chk.checked )
+			filtering_rule.filter[type].push( name[2] );
+		else
+			availables[type] = true;
+	}
+	// Delete filter type if all items are checked in a category
+	console.log( "---" );
+	for( var type in availables )
+	{
+		if( !availables[type] )
+			delete filtering_rule.filter[type];
 	}
 
 	// Sort
@@ -821,10 +833,10 @@ function init()
 		}
 	}
 
-	var	recv_ms = function(x) { db_ms = csv_to_db(x); init_ms_db(); updateMSList(true); }
-	var	recv_weapon1 = function(x) { db_weapon1 = csv_to_db(x); updateMSList(true); }
-	var	recv_weapon2 = function(x) { db_weapon2 = csv_to_db(x); updateMSList(true); }
-	var	recv_skill = function(x) { db_skill = csv_to_db(x); updateMSList(true); }
+	var	recv_ms = function(x)      { db_ms = csv_to_db(x);      db_ms.sort('id'); init_ms_db(); updateMSList(true); }
+	var	recv_weapon1 = function(x) { db_weapon1 = csv_to_db(x); db_weapon1.sort('name'); updateMSList(true); }
+	var	recv_weapon2 = function(x) { db_weapon2 = csv_to_db(x); db_weapon2.sort('name'); updateMSList(true); }
+	var	recv_skill = function(x)   { db_skill = csv_to_db(x);   db_skill.sort('name'); updateMSList(true); }
 	read_file( "db/btlop2_MS.csv?v=" + HASH_MS_CSV, recv_ms );
 	read_file( "db/btlop2_Weapon1.csv?v=" + HASH_WEAPON1_CSV, recv_weapon1 );
 	read_file( "db/btlop2_Weapon2.csv?v=" + HASH_WEAPON2_CSV, recv_weapon2 );
