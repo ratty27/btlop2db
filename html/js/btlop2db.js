@@ -958,6 +958,7 @@ function updateMSList(update_filter)
 	elem.innerHTML = '';
 
 	var	div_eval = document.createElement( 'div' );
+	div_eval.id = 'div_eval';
 
 	// - save eval button
 	var btn_save_eval = document.createElement('button');
@@ -968,6 +969,7 @@ function updateMSList(update_filter)
 	div_eval.appendChild( btn_save_eval );
 
 	var	url_div = document.createElement( 'div' );
+	url_div.id = 'url_div';
 	url_div.style.width = '100%';
 	url_div.style.textAlign = 'right';
 	div_eval.appendChild( url_div );
@@ -1335,7 +1337,21 @@ function update_share_url()
 	// Publish URL
 	var	elem = document.getElementById( 'share_url' );
 	var	baseurl = get_current_url();
-	elem.value = baseurl + '?e=' + code;
+	var	shareurl = baseurl + '?e=' + code;
+	elem.value = shareurl;
+
+	// Tweet button
+	var tweet_eval_div = document.getElementById( 'tweet_eval_div' );
+	if( tweet_eval_div )
+		tweet_eval_div.remove();
+	var	url_div = document.getElementById( 'url_div' )
+	var tweet_message = '自分のＭＳ評価はこれ！';
+	var	div_tweet = document.createElement( 'div' );
+	div_tweet.id = 'tweet_eval_div';
+	div_tweet.className = 'twitter';
+	div_tweet.innerHTML = '<a href="https://twitter.com/share" class="twitter-share-button" id="tweet_eval" data-show-count="false" data-text="' + tweet_message + '" data-url="' + shareurl + '" data-lang="ja">Tweet</a>';
+	url_div.appendChild( div_tweet );
+	twttr.widgets.load();
 
 	// Verify
 /*	bin = decode_base64( code );
