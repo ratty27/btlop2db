@@ -54,6 +54,7 @@ def replace_references(filename, hashes):
 		i += 1
 
 	temp_filename = os.path.join( os.path.dirname(filename), '__hash_temp__' )
+	modified = False
 	with open(filename, 'r', encoding='utf-8') as infile:
 		with open(temp_filename, 'w', encoding='utf-8') as outfile:
 			while True:
@@ -64,9 +65,11 @@ def replace_references(filename, hashes):
 					res = hash_[2].search( line )
 					if res:
 						line = line[0:res.start(1)] + hash_[1] + line[res.end(1):]
+						modified = True
 				outfile.write( line )
-	os.remove( filename )
-	os.rename( temp_filename, filename )
+	if modified:
+		os.remove( filename )
+		os.rename( temp_filename, filename )
 
 # ----------------------------------------------------------------------
 
