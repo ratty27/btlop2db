@@ -1345,7 +1345,7 @@ function update_share_url()
 	if( tweet_eval_div )
 		tweet_eval_div.remove();
 	var	url_div = document.getElementById( 'url_div' )
-	var tweet_message = '自分のＭＳ評価はこれ！';
+	var tweet_message = '自分のＭＳ評価はこれ！\n#バトオペ2\n';
 	var	div_tweet = document.createElement( 'div' );
 	div_tweet.id = 'tweet_eval_div';
 	div_tweet.className = 'twitter';
