@@ -620,9 +620,14 @@ function updateMSList(update_filter)
 			cidx0.push( idx );
 	}
 	var idx_id = db.searchColumn( 'id' );
+	var idx_name = db.searchColumn( 'name' );
 	var idx_type = db.searchColumn( 'type' );
+	var idx_weapon1 = db.searchColumn( 'main_weapon1' );
+	var idx_weapon2 = db.searchColumn( 'main_weapon2' );
+	var idx_subweapon = db.searchColumn( 'sub_weapon' );
 	var idx_skills = db.searchColumn( 'skills' );
 	var idx_eval = db.searchColumn( 'eval' );
+	var idx_weapon1_sub = db_weapon1.searchColumn( 'sub_weapon' );
 
 	// Create table
 	var PERIOD_HEADER = 15;
@@ -683,7 +688,10 @@ function updateMSList(update_filter)
 			var	text = db.raw[i][cidx0[j]];
 			if( typeof text == 'string' )
 			{
-				text = text.replace( /\n/g, '<br>' );
+				if( cidx0[j] == idx_name )
+					text = text.replace( /\n/g, ' ' );
+				else
+					text = text.replace( /\n/g, '<br>' );
 				if( j != 0 )
 					cell.style.textAlign = 'center'
 			}
@@ -698,25 +706,60 @@ function updateMSList(update_filter)
 		}
 
 		// Parameters - line 2
+		var	first_span = 2;
+		var line1_columns = cidx0.length + 1;
+		var	span = Math.floor((line1_columns - first_span) / (cidx1.length - 1));
+		var	withsub = [];
 		if( filtering_rule.show_detail && cidx1.length > 0 )
 		{
 			var idx_exp = db_skill.searchColumn( 'explanation' );
-			var	first_span = 2;
-			var line1_columns = cidx0.length + 1;
-			var	span = Math.floor((line1_columns - first_span) / (cidx1.length - 1));
 			var	num = 0;
 			row = tbl.insertRow(-1);
 			for( var j = 0; j < cidx1.length; ++j )
 			{
 				var	text = db.raw[i][cidx1[j]];
-				if( cidx1[j] == idx_skills )
+				if( cidx1[j] == idx_weapon1 )
+				{
+					var	weapons = text.split( '\n' );
+					var	single = [];
+					for( var k = 0; k < weapons.length; ++k )
+					{
+						var weapon_name = weapons[k];
+						if( weapon_name == '' )
+							continue;
+						var	weapon_idx = db_weapon1.findIndex( 'name', weapon_name );
+						if( weapon_idx >= 0 )
+						{
+							var	sub_weapon = db_weapon1.raw[weapon_idx][idx_weapon1_sub];
+							if( sub_weapon != '' )
+							{
+								withsub.push( [weapon_name, sub_weapon] );
+								continue;
+							}
+						}
+						single.push( weapon_name );
+					}
+					text = single.join( '<br>' );
+				}
+				else if( cidx1[j] == idx_skills )
 				{
 					var	skills = text.split( '\n' )
 					text = '<table border=0 width="100%" style="box-shadow: none;">'
 					for( var k = 0; k < skills.length; ++k )
 					{
+						if( skills[k] == '' )
+							continue;
 						var tips_idx = db_skill.findIndex( 'name', skills[k] );
-						var tips = db_skill.raw[tips_idx][idx_exp];
+						var	tips;
+						if( tips_idx < 0 )
+						{
+							console.error( 'Error: "' + skills[k] + '" is not found' );
+							tips = '';
+						}
+						else
+						{
+							tips = db_skill.raw[tips_idx][idx_exp];
+						}
 						text += '<tr><td class="skill_la"><span title="' + tips + '">' + skills[k].slice(0, -3) + '</span></td>';
 						text += '<td class="skill_ra">' + skills[k].slice(-3) + '</td></tr>';
 					}
@@ -743,6 +786,47 @@ function updateMSList(update_filter)
 				{
 					cell.colSpan = '' + span;
 					num += span;
+				}
+				if( (cidx1[j] == idx_weapon2 || cidx1[j] == idx_skills) && withsub.length > 0 )
+				{
+					var	num = withsub.length + 1;
+					cell.rowSpan = '' + num;
+				}
+			}
+		}
+
+		// Parameters - line 3
+		if( withsub.length > 0 )
+		{
+			var	num = 0;
+			for( var k = 0; k < withsub.length; ++k )
+			{
+				row = tbl.insertRow(-1);
+				for( var j = 0; j < cidx1.length; ++j )
+				{
+					if( cidx1[j] == idx_weapon2 )
+						continue;
+
+					var	cell = row.insertCell(-1);
+					cell.style.fontSize = 'small';
+					if( cidx1[j] == idx_weapon1 )
+						cell.innerHTML = withsub[k][0];
+					else if( cidx1[j] == idx_subweapon )
+						cell.innerHTML = withsub[k][1];
+					if( j == 0 )
+					{
+						cell.colSpan = '' + first_span;
+						num += first_span;
+					}
+					else if( j == cidx1.length - 1 )
+					{
+						cell.colSpan = '' + (line1_columns - num);
+					}
+					else
+					{
+						cell.colSpan = '' + span;
+						num += span;
+					}
 				}
 			}
 		}
