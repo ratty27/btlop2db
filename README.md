@@ -9,5 +9,5 @@ Google Chrome, FireFox, InternetExplorer, Edge で動作確認しています。
 ## 公開
 こちらで公開しています。
 
-http://shinobu27.capoo.jp/btlop2db/index.html
+http://shinobu27.capoo.jp/btlop2db/
 
