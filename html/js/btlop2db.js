@@ -280,20 +280,61 @@ function add_filter(tbl, name, id_, arr)
 	cell0.style.fontSize = 'small';
 
 	var	cell1 = row.insertCell(-1);
-	cell1.style.width = '924px';
-	cell1.style.display = 'inline-flex';
-	cell1.style.flexWrap = 'wrap';
-	for( var i = 0; i < arr.length; ++i )
-	{
-		if( arr[i] == '' )
-			continue;
+//	if( BROWSER_TYPE == BROWSER_TYPE_IE || BROWSER_TYPE == BROWSER_TYPE_EDGE )
+	{	// Arrange by internal tabe manually, because IE and Edge can't arrange buttons in flex.
+		var	maxcols;
+		if( name == 'スキル' )
+			maxcols = 5;
+		else
+			maxcols = arr.length;
 
-		var chkname = 'chk_' + id_ + '_' + arr[i];
-		var chk = create_checkbox( chkname, arr[i], true );
-		cell1.appendChild( chk );
+		var	intbl = document.createElement( 'table' );
+		intbl.style.width = 'auto';
+		intbl.style.boxShadow = 'none';
+		var	inrow = null;
+		var	colnum = 0;
+		for( var i = 0; i < arr.length; ++i )
+		{
+			if( arr[i] == '' )
+				continue;
 
-		ret.push( chkname );
+			if( !inrow )
+				inrow = intbl.insertRow( -1 );
+
+			var chkname = 'chk_' + id_ + '_' + arr[i];
+			var chk = create_checkbox( chkname, arr[i], true );
+			ret.push( chkname );
+
+			var	incel = inrow.insertCell( -1 );
+			incel.style.border = 'none';
+			incel.appendChild( chk );
+
+			colnum += 1;
+			if( colnum >= maxcols )
+			{
+				inrow = null;
+				colnum = 0;
+			}
+		}
+		cell1.appendChild( intbl );
 	}
+/*	else
+	{
+		cell1.style.width = '924px';
+		cell1.style.display = 'inline-flex';
+		cell1.style.flexWrap = 'wrap';
+		for( var i = 0; i < arr.length; ++i )
+		{
+			if( arr[i] == '' )
+				continue;
+
+			var chkname = 'chk_' + id_ + '_' + arr[i];
+			var chk = create_checkbox( chkname, arr[i], true );
+			cell1.appendChild( chk );
+
+			ret.push( chkname );
+		}
+	}*/
 
 	return ret;
 }
