@@ -637,15 +637,15 @@ function updateMSList(update_filter)
 			cell0.innerHTML = '' + (i + 1);
 
 			var name_item0 = 'sort' + i;
-			var	div_item0 = create_pulldown( name_item0, sort_arr, 0 );
+			var	div_item0 = create_pulldown( name_item0, sort_arr, 0, 100 );
 			var	cell1 = row.insertCell(-1);
 			cell1.style.width = '100px';
-			cell1.appendChild( div_item0 );
+			cell1.innerHTML = div_item0;
 
 			var name_item1 = 'sort' + i + '_type';
-			var	div_item1 = create_pulldown( name_item1, SORT_TYPE, 0 );
+			var	div_item1 = create_pulldown( name_item1, SORT_TYPE, 0, 100 );
 			var	cell2 = row.insertCell(-1);
-			cell2.appendChild( div_item1 );
+			cell2.innerHTML = div_item1;
 
 			sel_sort.push( [name_item0, name_item1] );
 		}
@@ -748,7 +748,7 @@ function updateMSList(update_filter)
 	// Create table
 	var PERIOD_HEADER = 15;
 	var count = PERIOD_HEADER;
-	var	tbl = document.createElement("table");
+	var	tbl = "<table>";
 	for( var i = 0; i < db.getRecordNum(); ++i )
 	{
 		var	bgcol = 'generalbg';
@@ -760,27 +760,23 @@ function updateMSList(update_filter)
 		// Header
 		if( filtering_rule.show_detail || count >= PERIOD_HEADER )
 		{
-			var	row_head = tbl.insertRow(-1);
-
-			var cell = document.createElement( 'th' );
-			cell.innerHTML = '評価';
-			row_head.appendChild( cell );
+			tbl += '<tr>';
+			tbl += '<th>評価</th>';
 
 			for( var j = 0; j < cidx0.length; ++j )
 			{
 				var	text = db.columns[cidx0[j]];
-
-				cell = document.createElement( 'th' );
-				cell.innerHTML = PARAM_NAME[text];
-				row_head.appendChild( cell );
+				tbl += '<th>' + PARAM_NAME[text] + '</th>';
 			}
 			count = 0;
+
+			tbl += '</tr>';
 		}
 
 		// Parameters - line 1
-		var row = tbl.insertRow(-1);
+		tbl += '<tr>';
 		{	// User's evaluation
-			var	sel = create_pulldown( 'eval_' + db.raw[i][idx_id], EVAL_PARAM, db.raw[i][idx_eval],
+			var	sel = create_pulldown( 'eval_' + db.raw[i][idx_id], EVAL_PARAM, db.raw[i][idx_eval], 40,
 				function(item)
 				{
 					var	id_ = item.id.split('_');
@@ -791,17 +787,14 @@ function updateMSList(update_filter)
 					}
 					update_share_url();
 				} );
-			sel.style.width = '40px';
 
-			var cell = row.insertCell(-1);
-			cell.appendChild( sel );
-			row.appendChild( cell );
+			tbl += '<td>' + sel + '</td>';
 		}
 		for( var j = 0; j < cidx0.length; ++j )
 		{
-			var	cell = row.insertCell(-1);
-
 			var	text = db.raw[i][cidx0[j]];
+			var	attr = '';
+			var	style = '';
 			if( typeof text == 'string' )
 			{
 				if( cidx0[j] == idx_name )
@@ -809,17 +802,22 @@ function updateMSList(update_filter)
 				else
 					text = text.replace( /\n/g, '<br>' );
 				if( j != 0 )
-					cell.style.textAlign = 'center'
+					style += 'text-align: center;';
 			}
 			else if( typeof text == 'number' )
 			{
-				cell.style.textAlign = 'right'
+				style += ' text-align: right;';
 			}
 
-			cell.innerHTML = text;
 			if( j == 0 )
-				cell.className = bgcol;
+				attr += ' class="' + bgcol + '"';
+
+			if( style.length > 0 )
+				attr += ' style="' + style.trim() + '"';
+
+			tbl += '<td' + attr + '>' + text + '</td>';
 		}
+		tbl += '</tr>';
 
 		// Parameters - line 2
 		var	first_span = 2;
@@ -830,7 +828,7 @@ function updateMSList(update_filter)
 		{
 			var idx_exp = db_skill.searchColumn( 'explanation' );
 			var	num = 0;
-			row = tbl.insertRow(-1);
+			tbl += '<tr>';
 			for( var j = 0; j < cidx1.length; ++j )
 			{
 				var	text = db.raw[i][cidx1[j]];
@@ -900,29 +898,30 @@ function updateMSList(update_filter)
 					text = out.join( '<br>' );
 				}
 
-				var	cell = row.insertCell(-1);
-				cell.style.fontSize = 'small';
-				cell.innerHTML = text;
+				var	attr = '';
 				if( j == 0 )
 				{
-					cell.colSpan = '' + first_span;
+					attr += ' colspan="' + first_span +'"';
 					num += first_span;
 				}
 				else if( j == cidx1.length - 1 )
 				{
-					cell.colSpan = '' + (line1_columns - num);
+					var	colspan = line1_columns - num;
+					attr += ' colspan="' + colspan +'"';
 				}
 				else
 				{
-					cell.colSpan = '' + span;
+					attr += ' colspan="' + span +'"';
 					num += span;
 				}
 				if( (cidx1[j] == idx_weapon2 || cidx1[j] == idx_skills) && withsub.length > 0 )
 				{
 					var	num = withsub.length + 1;
-					cell.rowSpan = '' + num;
+					attr += ' rowspan="' + num +'"';
 				}
+				tbl += '<td style="font-size: small"' + attr + '>' + text + '</td>';
 			}
+			tbl += '</tr>';
 		}
 
 		// Parameters - line 3
@@ -931,38 +930,42 @@ function updateMSList(update_filter)
 			var	num = 0;
 			for( var k = 0; k < withsub.length; ++k )
 			{
-				row = tbl.insertRow(-1);
+				tbl += '<tr>';
 				for( var j = 0; j < cidx1.length; ++j )
 				{
 					if( cidx1[j] == idx_weapon2 )
 						continue;
 
-					var	cell = row.insertCell(-1);
-					cell.style.fontSize = 'small';
-					if( cidx1[j] == idx_weapon1 )
-						cell.innerHTML = create_disp_weapon( db_weapon1, withsub[k][0], db.raw[i][idx_level] );
-					else if( cidx1[j] == idx_subweapon )
-						cell.innerHTML = create_disp_weapon( db_subweapon, withsub[k][1], db.raw[i][idx_level], withsub[k][0] );
+					var	colspan;
 					if( j == 0 )
 					{
-						cell.colSpan = '' + first_span;
+						colspan = first_span;
 						num += first_span;
 					}
 					else if( j == cidx1.length - 1 )
 					{
-						cell.colSpan = '' + (line1_columns - num);
+						colspan = line1_columns - num;
 					}
 					else
 					{
-						cell.colSpan = '' + span;
+						colspan = span;
 						num += span;
 					}
+
+					tbl += '<td colspan="' + colspan + '" style="font-size: small">';
+					if( cidx1[j] == idx_weapon1 )
+						tbl += create_disp_weapon( db_weapon1, withsub[k][0], db.raw[i][idx_level] );
+					else if( cidx1[j] == idx_subweapon )
+						tbl += create_disp_weapon( db_subweapon, withsub[k][1], db.raw[i][idx_level], withsub[k][0] );
+					tbl += '</td>';
 				}
+				tbl += '</tr>';
 			}
 		}
 
 		++count;
 	}
+	tbl += '</table>';
 
 	// Append to document
 	var	elem = document.getElementById('list');
@@ -1017,7 +1020,9 @@ function updateMSList(update_filter)
 	elem.appendChild( div_eval );
 
 	// - MS list
-	elem.appendChild( tbl );
+	var	div_tbl = document.createElement( 'div' );
+	div_tbl.innerHTML = tbl;
+	elem.appendChild( div_tbl );
 
 	// - save eval button
 	var btn_save_eval2 = btn_save_eval.cloneNode( true );
