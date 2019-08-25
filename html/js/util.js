@@ -105,25 +105,20 @@ function create_checkbox(id_, label_, init_)
 // ---------
 /**	@brief	Create pulldown
  */
-function create_pulldown(id_, items_, init_, callback)
+function create_pulldown(id_, items_, init_, w, callback)
 {
-	var	item = document.createElement( 'select' );
-	item.id = id_;
-	if( callback )
-		item.addEventListener( "change", function() { callback(item); } );
+	if( !callback )
+		callback = '';
+	else
+		callback = ' onchange="' + callback + '(this)"';
+	var	item = '<div class="cp_ipselect cp_sl02" style="width: ' + w + 'px;"><select id="' + id_ + '"' + callback + '>';
 	for( var i = 0; i < items_.length; ++i )
 	{
-		var	opt = document.createElement( 'option' );
-		opt.value = i;
-		opt.innerText = items_[i];
-		item.appendChild( opt );
+		var	attr = '';
+		if( i == init_ )
+			attr = ' selected';
+		item += '<option value="' + i + '"' + attr + '>' + items_[i] + '</option>';
 	}
-	if( init_ )
-		item.selectedIndex = init_;
-
-	var div = document.createElement( 'div' );
-	div.className = 'cp_ipselect cp_sl02';
-	div.style.width = '100px';
-	div.appendChild( item );
-	return div;
+	item += '</select></div>';
+	return item;
 }
