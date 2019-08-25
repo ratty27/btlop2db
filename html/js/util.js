@@ -5,6 +5,70 @@
  */
 
 // ---------
+//	Constants
+var	BROWSER_TYPE_UNKNOWN = 0;
+var	BROWSER_TYPE_IE      = 1;
+var	BROWSER_TYPE_EDGE    = 2;
+var	BROWSER_TYPE_CHROME  = 3;
+var	BROWSER_TYPE_SAFARI  = 4;
+var	BROWSER_TYPE_FIREFOX = 5;
+var	BROWSER_TYPE_OPERA   = 6;
+
+// ---------
+/**	@brief	Get browser type
+ */
+function get_browser_type()
+{
+	var userAgent = window.navigator.userAgent.toLowerCase();
+	if( userAgent.indexOf('msie') != -1
+	 || userAgent.indexOf('trident') != -1 )
+		return BROWSER_TYPE_IE;
+	else if(userAgent.indexOf('edge') != -1)
+		return BROWSER_TYPE_EDGE;
+	else if(userAgent.indexOf('chrome') != -1)
+		return BROWSER_TYPE_CHROME;
+	else if(userAgent.indexOf('safari') != -1)
+		return BROWSER_TYPE_SAFARI;
+	else if(userAgent.indexOf('firefox') != -1)
+		return BROWSER_TYPE_FIREFOX;
+	else if(userAgent.indexOf('opera') != -1)
+		return BROWSER_TYPE_OPERA;
+	else
+		return BROWSER_TYPE_UNKNOWN;
+}
+
+var BROWSER_TYPE = get_browser_type();
+
+// ---------
+// Add missing functions, those are for IE.
+if( !String.prototype.startsWith )
+{
+	String.prototype.startsWith = function(s)
+	{
+		return this.substr(0, s.length) === s;
+	};
+}
+if( !String.prototype.endsWith )
+{
+	String.prototype.endsWith = function(s)
+	{
+		return this.substr(this.length - s.length, s.length) === s;
+	};
+}
+if( !Array.prototype.findIndex )
+{
+	Array.prototype.findIndex = function(func)
+	{
+		for( var i = 0; i < this.length; ++i )
+		{
+			if( func(this[i]) )
+				return i;
+		}
+		return -1;
+	}
+}
+
+// ---------
 /**	@brief	Get current URL
  */
 function get_current_url()
@@ -41,25 +105,20 @@ function create_checkbox(id_, label_, init_)
 // ---------
 /**	@brief	Create pulldown
  */
-function create_pulldown(id_, items_, init_, callback)
+function create_pulldown(id_, items_, init_, w, callback)
 {
-	var	item = document.createElement( 'select' );
-	item.id = id_;
-	if( callback )
-		item.addEventListener( "change", function() { callback(item); } );
+	if( !callback )
+		callback = '';
+	else
+		callback = ' onchange="' + callback + '(this)"';
+	var	item = '<div class="cp_ipselect cp_sl02" style="width: ' + w + 'px;"><select id="' + id_ + '"' + callback + '>';
 	for( var i = 0; i < items_.length; ++i )
 	{
-		var	opt = document.createElement( 'option' );
-		opt.value = i;
-		opt.innerText = items_[i];
-		item.appendChild( opt );
+		var	attr = '';
+		if( i == init_ )
+			attr = ' selected';
+		item += '<option value="' + i + '"' + attr + '>' + items_[i] + '</option>';
 	}
-	if( init_ )
-		item.selectedIndex = init_;
-
-	var div = document.createElement( 'div' );
-	div.className = 'cp_ipselect cp_sl02';
-	div.style.width = '100px';
-	div.appendChild( item );
-	return div;
+	item += '</select></div>';
+	return item;
 }

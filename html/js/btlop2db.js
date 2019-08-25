@@ -58,42 +58,41 @@ var sel_sort = null;
 var	args = {}
 
 // ---------
-/**	@brief	Filtering rule class
+/*	Filtering rule class
  */
-class FilteringRule
+
+//!	@brief	Constructor
+var FilteringRule = function()
 {
-	//!	@brief	Constructor
-	constructor()
-	{
-		this.enable_columns = null;
-		this.filter = {};
-		this.sort = [];
-		this.show_detail = false;
-	}
+	this.enable_columns = null;
+	this.filter = {};
+	this.sort = [];
+	this.show_detail = false;
+}
 
 	//!	@brief	Store from oject
-	store_obj(obj)
-	{
-		this.enable_columns = obj.enable_columns;
-		this.filter = obj.filter;
-		this.sort = obj.sort;
-		this.show_detail = obj.show_detail;
-	}
+FilteringRule.prototype.store_obj = function(obj)
+{
+	this.enable_columns = obj.enable_columns;
+	this.filter = obj.filter;
+	this.sort = obj.sort;
+	this.show_detail = obj.show_detail;
+}
 
 	//!	@brief	Check whether sorting is required
-	require_sort()
+FilteringRule.prototype.require_sort = function()
+{
+	for( var i = 0; i < this.sort.length; ++i )
 	{
-		for( var i = 0; i < this.sort.length; ++i )
+		if( this.sort[i] )
 		{
-			if( this.sort[i] )
-			{
-				if( this.sort[i][0] > 0 )
-					return true;
-			}
+			if( this.sort[i][0] > 0 )
+				return true;
 		}
-		return false;
 	}
+	return false;
 }
+
 var filtering_rule = new FilteringRule();
 
 // ---------
@@ -281,20 +280,61 @@ function add_filter(tbl, name, id_, arr)
 	cell0.style.fontSize = 'small';
 
 	var	cell1 = row.insertCell(-1);
-	cell1.style.width = '924px';
-	cell1.style.display = 'inline-flex';
-	cell1.style.flexWrap = 'wrap';
-	for( var i = 0; i < arr.length; ++i )
-	{
-		if( arr[i] == '' )
-			continue;
+//	if( BROWSER_TYPE == BROWSER_TYPE_IE || BROWSER_TYPE == BROWSER_TYPE_EDGE )
+	{	// Arrange by internal tabe manually, because IE and Edge can't arrange buttons in flex.
+		var	maxcols;
+		if( name == 'スキル' )
+			maxcols = 5;
+		else
+			maxcols = arr.length;
 
-		var chkname = 'chk_' + id_ + '_' + arr[i];
-		var chk = create_checkbox( chkname, arr[i], true );
-		cell1.appendChild( chk );
+		var	intbl = document.createElement( 'table' );
+		intbl.style.width = 'auto';
+		intbl.style.boxShadow = 'none';
+		var	inrow = null;
+		var	colnum = 0;
+		for( var i = 0; i < arr.length; ++i )
+		{
+			if( arr[i] == '' )
+				continue;
 
-		ret.push( chkname );
+			if( !inrow )
+				inrow = intbl.insertRow( -1 );
+
+			var chkname = 'chk_' + id_ + '_' + arr[i];
+			var chk = create_checkbox( chkname, arr[i], true );
+			ret.push( chkname );
+
+			var	incel = inrow.insertCell( -1 );
+			incel.style.border = 'none';
+			incel.appendChild( chk );
+
+			colnum += 1;
+			if( colnum >= maxcols )
+			{
+				inrow = null;
+				colnum = 0;
+			}
+		}
+		cell1.appendChild( intbl );
 	}
+/*	else
+	{
+		cell1.style.width = '924px';
+		cell1.style.display = 'inline-flex';
+		cell1.style.flexWrap = 'wrap';
+		for( var i = 0; i < arr.length; ++i )
+		{
+			if( arr[i] == '' )
+				continue;
+
+			var chkname = 'chk_' + id_ + '_' + arr[i];
+			var chk = create_checkbox( chkname, arr[i], true );
+			cell1.appendChild( chk );
+
+			ret.push( chkname );
+		}
+	}*/
 
 	return ret;
 }
@@ -495,6 +535,21 @@ function filter_ms(record)
 }
 
 // ---------
+/**	@brief	Change evaluation event
+ */
+function event_change_eval(item)
+{
+	var	id_ = item.id.split('_');
+	var	idx = db_ms.findIndex( 'id', Number(id_[1]) );
+	if( idx >= 0 )
+	{
+		var idx_eval = db_ms.searchColumn( 'eval' );
+		db_ms.raw[idx][idx_eval] = item.selectedIndex;
+	}
+	update_share_url();
+}
+
+// ---------
 /**	@brief	Update MS list
  */
 function updateMSList(update_filter)
@@ -637,15 +692,15 @@ function updateMSList(update_filter)
 			cell0.innerHTML = '' + (i + 1);
 
 			var name_item0 = 'sort' + i;
-			var	div_item0 = create_pulldown( name_item0, sort_arr, 0 );
+			var	div_item0 = create_pulldown( name_item0, sort_arr, 0, 100 );
 			var	cell1 = row.insertCell(-1);
 			cell1.style.width = '100px';
-			cell1.appendChild( div_item0 );
+			cell1.innerHTML = div_item0;
 
 			var name_item1 = 'sort' + i + '_type';
-			var	div_item1 = create_pulldown( name_item1, SORT_TYPE, 0 );
+			var	div_item1 = create_pulldown( name_item1, SORT_TYPE, 0, 100 );
 			var	cell2 = row.insertCell(-1);
-			cell2.appendChild( div_item1 );
+			cell2.innerHTML = div_item1;
 
 			sel_sort.push( [name_item0, name_item1] );
 		}
@@ -661,17 +716,24 @@ function updateMSList(update_filter)
 	if( !filtering_rule.enable_columns )
 	{
 		// Set default showing columns
-		filtering_rule.enable_columns = db_ms.columns.concat().filter( n => n != 'id' && n != 'eval' );
+		filtering_rule.enable_columns = db_ms.columns.concat([]);
+		filtering_rule.enable_columns = filtering_rule.enable_columns.filter( 
+			function(n)
+			{
+				return n != 'id' && n != 'eval';
+			}
+		);
 	}
 
 	// Filtering with user's rules
 	var	db = db_ms.filter( filter_ms );
 
 	// Sort with user's rules
-	if( filtering_rule.require_sort() )
+//	if( filtering_rule.require_sort() )
 	{
 		db = db.sort( function(rec0, rec1)
 			{
+				var	sorted_by_name = false;
 				for( var i = 0; i < filtering_rule.sort.length; ++i )
 				{
 					if( !filtering_rule.sort[i] )
@@ -704,7 +766,17 @@ function updateMSList(update_filter)
 							else if( rec0[idx] > rec1[idx] )
 								return - less;
 						}
+						if( SORT_PARAM[type - 1] == 'name' )
+							sorted_by_name = true;
 					}
+				}
+				if( !sorted_by_name )
+				{
+					var	idx = db_ms.searchColumn( 'name' );
+					if( rec0[idx] < rec1[idx] )
+						return -1;
+					else if( rec0[idx] > rec1[idx] )
+						return 1;
 				}
 				return 0;
 			} );
@@ -737,7 +809,7 @@ function updateMSList(update_filter)
 	// Create table
 	var PERIOD_HEADER = 15;
 	var count = PERIOD_HEADER;
-	var	tbl = document.createElement("table");
+	var	tbl = "<table>";
 	for( var i = 0; i < db.getRecordNum(); ++i )
 	{
 		var	bgcol = 'generalbg';
@@ -749,48 +821,31 @@ function updateMSList(update_filter)
 		// Header
 		if( filtering_rule.show_detail || count >= PERIOD_HEADER )
 		{
-			var	row_head = tbl.insertRow(-1);
-
-			var cell = document.createElement( 'th' );
-			cell.innerHTML = '評価';
-			row_head.appendChild( cell );
+			tbl += '<tr>';
+			tbl += '<th>評価</th>';
 
 			for( var j = 0; j < cidx0.length; ++j )
 			{
 				var	text = db.columns[cidx0[j]];
-
-				cell = document.createElement( 'th' );
-				cell.innerHTML = PARAM_NAME[text];
-				row_head.appendChild( cell );
+				tbl += '<th>' + PARAM_NAME[text] + '</th>';
 			}
 			count = 0;
+
+			tbl += '</tr>';
 		}
 
 		// Parameters - line 1
-		var row = tbl.insertRow(-1);
+		tbl += '<tr>';
 		{	// User's evaluation
-			var	sel = create_pulldown( 'eval_' + db.raw[i][idx_id], EVAL_PARAM, db.raw[i][idx_eval],
-				function(item)
-				{
-					var	id_ = item.id.split('_');
-					var	idx = db_ms.findIndex( 'id', Number(id_[1]) );
-					if( idx >= 0 )
-					{
-						db_ms.raw[idx][idx_eval] = item.selectedIndex;
-					}
-					update_share_url();
-				} );
-			sel.style.width = '40px';
+			var	sel = create_pulldown( 'eval_' + db.raw[i][idx_id], EVAL_PARAM, db.raw[i][idx_eval], 40, "event_change_eval" );
 
-			var cell = row.insertCell(-1);
-			cell.appendChild( sel );
-			row.appendChild( cell );
+			tbl += '<td>' + sel + '</td>';
 		}
 		for( var j = 0; j < cidx0.length; ++j )
 		{
-			var	cell = row.insertCell(-1);
-
 			var	text = db.raw[i][cidx0[j]];
+			var	attr = '';
+			var	style = '';
 			if( typeof text == 'string' )
 			{
 				if( cidx0[j] == idx_name )
@@ -798,17 +853,22 @@ function updateMSList(update_filter)
 				else
 					text = text.replace( /\n/g, '<br>' );
 				if( j != 0 )
-					cell.style.textAlign = 'center'
+					style += 'text-align: center;';
 			}
 			else if( typeof text == 'number' )
 			{
-				cell.style.textAlign = 'right'
+				style += ' text-align: right;';
 			}
 
-			cell.innerHTML = text;
 			if( j == 0 )
-				cell.className = bgcol;
+				attr += ' class="' + bgcol + '"';
+
+			if( style.length > 0 )
+				attr += ' style="' + style.trim() + '"';
+
+			tbl += '<td' + attr + '>' + text + '</td>';
 		}
+		tbl += '</tr>';
 
 		// Parameters - line 2
 		var	first_span = 2;
@@ -819,7 +879,7 @@ function updateMSList(update_filter)
 		{
 			var idx_exp = db_skill.searchColumn( 'explanation' );
 			var	num = 0;
-			row = tbl.insertRow(-1);
+			tbl += '<tr>';
 			for( var j = 0; j < cidx1.length; ++j )
 			{
 				var	text = db.raw[i][cidx1[j]];
@@ -889,29 +949,30 @@ function updateMSList(update_filter)
 					text = out.join( '<br>' );
 				}
 
-				var	cell = row.insertCell(-1);
-				cell.style.fontSize = 'small';
-				cell.innerHTML = text;
+				var	attr = '';
 				if( j == 0 )
 				{
-					cell.colSpan = '' + first_span;
+					attr += ' colspan="' + first_span +'"';
 					num += first_span;
 				}
 				else if( j == cidx1.length - 1 )
 				{
-					cell.colSpan = '' + (line1_columns - num);
+					var	colspan = line1_columns - num;
+					attr += ' colspan="' + colspan +'"';
 				}
 				else
 				{
-					cell.colSpan = '' + span;
+					attr += ' colspan="' + span +'"';
 					num += span;
 				}
 				if( (cidx1[j] == idx_weapon2 || cidx1[j] == idx_skills) && withsub.length > 0 )
 				{
 					var	num = withsub.length + 1;
-					cell.rowSpan = '' + num;
+					attr += ' rowspan="' + num +'"';
 				}
+				tbl += '<td style="font-size: small"' + attr + '>' + text + '</td>';
 			}
+			tbl += '</tr>';
 		}
 
 		// Parameters - line 3
@@ -920,38 +981,42 @@ function updateMSList(update_filter)
 			var	num = 0;
 			for( var k = 0; k < withsub.length; ++k )
 			{
-				row = tbl.insertRow(-1);
+				tbl += '<tr>';
 				for( var j = 0; j < cidx1.length; ++j )
 				{
 					if( cidx1[j] == idx_weapon2 )
 						continue;
 
-					var	cell = row.insertCell(-1);
-					cell.style.fontSize = 'small';
-					if( cidx1[j] == idx_weapon1 )
-						cell.innerHTML = create_disp_weapon( db_weapon1, withsub[k][0], db.raw[i][idx_level] );
-					else if( cidx1[j] == idx_subweapon )
-						cell.innerHTML = create_disp_weapon( db_subweapon, withsub[k][1], db.raw[i][idx_level], withsub[k][0] );
+					var	colspan;
 					if( j == 0 )
 					{
-						cell.colSpan = '' + first_span;
+						colspan = first_span;
 						num += first_span;
 					}
 					else if( j == cidx1.length - 1 )
 					{
-						cell.colSpan = '' + (line1_columns - num);
+						colspan = line1_columns - num;
 					}
 					else
 					{
-						cell.colSpan = '' + span;
+						colspan = span;
 						num += span;
 					}
+
+					tbl += '<td colspan="' + colspan + '" style="font-size: small">';
+					if( cidx1[j] == idx_weapon1 )
+						tbl += create_disp_weapon( db_weapon1, withsub[k][0], db.raw[i][idx_level] );
+					else if( cidx1[j] == idx_subweapon )
+						tbl += create_disp_weapon( db_subweapon, withsub[k][1], db.raw[i][idx_level], withsub[k][0] );
+					tbl += '</td>';
 				}
+				tbl += '</tr>';
 			}
 		}
 
 		++count;
 	}
+	tbl += '</table>';
 
 	// Append to document
 	var	elem = document.getElementById('list');
@@ -1006,7 +1071,9 @@ function updateMSList(update_filter)
 	elem.appendChild( div_eval );
 
 	// - MS list
-	elem.appendChild( tbl );
+	var	div_tbl = document.createElement( 'div' );
+	div_tbl.innerHTML = tbl;
+	elem.appendChild( div_tbl );
 
 	// - save eval button
 	var btn_save_eval2 = btn_save_eval.cloneNode( true );
@@ -1024,7 +1091,7 @@ function updateMSList(update_filter)
  */
 function init()
 {
-	var	params = location.search;
+	var	params = '' + location.search;
 	if( params.startsWith('?') )
 	{
 		params = params.substring(1).split('&');
@@ -1345,7 +1412,7 @@ function update_share_url()
 	if( tweet_eval_div )
 		tweet_eval_div.remove();
 	var	url_div = document.getElementById( 'url_div' )
-	var tweet_message = '自分のＭＳ評価はこれ！';
+	var tweet_message = '自分のＭＳ評価はこれ！\n#バトオペ2\n';
 	var	div_tweet = document.createElement( 'div' );
 	div_tweet.id = 'tweet_eval_div';
 	div_tweet.className = 'twitter';
