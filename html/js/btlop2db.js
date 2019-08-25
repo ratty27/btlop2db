@@ -495,6 +495,21 @@ function filter_ms(record)
 }
 
 // ---------
+/**	@brief	Change evaluation event
+ */
+function event_change_eval(item)
+{
+	var	id_ = item.id.split('_');
+	var	idx = db_ms.findIndex( 'id', Number(id_[1]) );
+	if( idx >= 0 )
+	{
+		var idx_eval = db_ms.searchColumn( 'eval' );
+		db_ms.raw[idx][idx_eval] = item.selectedIndex;
+	}
+	update_share_url();
+}
+
+// ---------
 /**	@brief	Update MS list
  */
 function updateMSList(update_filter)
@@ -776,17 +791,7 @@ function updateMSList(update_filter)
 		// Parameters - line 1
 		tbl += '<tr>';
 		{	// User's evaluation
-			var	sel = create_pulldown( 'eval_' + db.raw[i][idx_id], EVAL_PARAM, db.raw[i][idx_eval], 40,
-				function(item)
-				{
-					var	id_ = item.id.split('_');
-					var	idx = db_ms.findIndex( 'id', Number(id_[1]) );
-					if( idx >= 0 )
-					{
-						db_ms.raw[idx][idx_eval] = item.selectedIndex;
-					}
-					update_share_url();
-				} );
+			var	sel = create_pulldown( 'eval_' + db.raw[i][idx_id], EVAL_PARAM, db.raw[i][idx_eval], 40, "event_change_eval" );
 
 			tbl += '<td>' + sel + '</td>';
 		}

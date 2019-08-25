@@ -43,7 +43,11 @@ function create_checkbox(id_, label_, init_)
  */
 function create_pulldown(id_, items_, init_, w, callback)
 {
-	var	item = '<div class="cp_ipselect cp_sl02" style="width: ' + w + 'px;"><select id="' + id_ + '" onChange="' + callback + '(this)">';
+	if( !callback )
+		callback = '';
+	else
+		callback = ' onchange="' + callback + '(this)"';
+	var	item = '<div class="cp_ipselect cp_sl02" style="width: ' + w + 'px;"><select id="' + id_ + '"' + callback + '>';
 	for( var i = 0; i < items_.length; ++i )
 	{
 		var	attr = '';
