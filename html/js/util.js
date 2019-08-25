@@ -5,6 +5,70 @@
  */
 
 // ---------
+//	Constants
+var	BROWSER_TYPE_UNKNOWN = 0;
+var	BROWSER_TYPE_IE      = 1;
+var	BROWSER_TYPE_EDGE    = 2;
+var	BROWSER_TYPE_CHROME  = 3;
+var	BROWSER_TYPE_SAFARI  = 4;
+var	BROWSER_TYPE_FIREFOX = 5;
+var	BROWSER_TYPE_OPERA   = 6;
+
+// ---------
+/**	@brief	Get browser type
+ */
+function get_browser_type()
+{
+	var userAgent = window.navigator.userAgent.toLowerCase();
+	if( userAgent.indexOf('msie') != -1
+	 || userAgent.indexOf('trident') != -1 )
+		return BROWSER_TYPE_IE;
+	else if(userAgent.indexOf('edge') != -1)
+		return BROWSER_TYPE_EDGE;
+	else if(userAgent.indexOf('chrome') != -1)
+		return BROWSER_TYPE_CHROME;
+	else if(userAgent.indexOf('safari') != -1)
+		return BROWSER_TYPE_SAFARI;
+	else if(userAgent.indexOf('firefox') != -1)
+		return BROWSER_TYPE_FIREFOX;
+	else if(userAgent.indexOf('opera') != -1)
+		return BROWSER_TYPE_OPERA;
+	else
+		return BROWSER_TYPE_UNKNOWN;
+}
+
+var BROWSER_TYPE = get_browser_type();
+
+// ---------
+// Add missing functions, those are for IE.
+if( !String.prototype.startsWith )
+{
+	String.prototype.startsWith = function(s)
+	{
+		return this.substr(0, s.length) === s;
+	};
+}
+if( !String.prototype.endsWith )
+{
+	String.prototype.endsWith = function(s)
+	{
+		return this.substr(this.length - s.length, s.length) === s;
+	};
+}
+if( !Array.prototype.findIndex )
+{
+	Array.prototype.findIndex = function(func)
+	{
+		for( var i = 0; i < this.length; ++i )
+		{
+			if( func(this[i]) )
+				return i;
+		}
+		return -1;
+	}
+}
+
+// ---------
 /**	@brief	Get current URL
  */
 function get_current_url()

@@ -13,78 +13,76 @@ var	BASE64_CODE = [
 ];
 
 // ---------
-/**	@brief	Bit stream class
+/*	Bit stream class
  */
-class bitstream
+
+//!	@brief	Constructor
+var bitstream = function(maxsize)
 {
-	//!	@brief	Constructor
-	constructor(maxsize)
-	{
-		this.buff = new Uint8Array( maxsize );
-		// for writing
-		this.index = 0;
-		this.bits = 0;
-		// for reading
-		this.rindex = 0;
-		this.rbits = 0;
-	}
+	this.buff = new Uint8Array( maxsize );
+	// for writing
+	this.index = 0;
+	this.bits = 0;
+	// for reading
+	this.rindex = 0;
+	this.rbits = 0;
+}
 
-	//!	@brief	Write bits
-	write( val, bits )
+//!	@brief	Write bits
+bitstream.prototype.write = function( val, bits )
+{
+	// val = val & ((1 << bits) - 1);
+	while( bits > 0 )
 	{
-		// val = val & ((1 << bits) - 1);
-		while( bits > 0 )
+		var	rem = Math.min( 8 - this.bits, bits );
+		this.buff[this.index] |= (val << this.bits) & 0xff;
+		val >>= rem;
+		bits -= rem;
+		this.bits += rem;
+		if( this.bits >= 8 )
 		{
-			var	rem = Math.min( 8 - this.bits, bits );
-			this.buff[this.index] |= (val << this.bits) & 0xff;
-			val >>= rem;
-			bits -= rem;
-			this.bits += rem;
-			if( this.bits >= 8 )
-			{
-				this.bits = 0;
-				this.index++;
-			}
+			this.bits = 0;
+			this.index++;
 		}
 	}
+}
 
-	//!	@brief	Reset read point
-	reset_read()
-	{
-		this.rindex = 0;
-		this.rbits = 0;
-	}
+//!	@brief	Reset read point
+bitstream.prototype.reset_read = function()
+{
+	this.rindex = 0;
+	this.rbits = 0;
+}
 
-	//!	@brief	Read bits
-	read( bits )
+//!	@brief	Read bits
+bitstream.prototype.read = function( bits )
+{
+	var	ret = 0;
+	var	n = 0;
+	while( n < bits )
 	{
-		var	ret = 0;
-		var	n = 0;
-		while( n < bits )
+		var	rem = Math.min( 8 - this.rbits, bits - n );
+		ret |= (((this.buff[this.rindex] >> this.rbits) & ((1 << rem) - 1)) << n);
+		n += rem;
+		this.rbits += rem;
+		if( this.rbits >= 8 )
 		{
-			var	rem = Math.min( 8 - this.rbits, bits - n );
-			ret |= (((this.buff[this.rindex] >> this.rbits) & ((1 << rem) - 1)) << n);
-			n += rem;
-			this.rbits += rem;
-			if( this.rbits >= 8 )
-			{
-				this.rbits = 0;
-				this.rindex++;
-			}
+			this.rbits = 0;
+			this.rindex++;
 		}
-		return ret;
 	}
+	return ret;
+}
 
-	//!	@brief	Check whether reading pointer arrived to end of stream
-	eos()
-	{
-		if( this.rindex < this.index )
-			return false;
-		else if( this.rindex > this.index )
-			return true;
-		else
-			return this.rbits >= this.bits;
-	}
+//!	@brief	Check whether reading pointer arrived to end of stream
+bitstream.prototype.eos = function()
+{
+	if( this.rindex < this.index )
+		return false;
+	else if( this.rindex > this.index )
+		return true;
+	else
+		return this.rbits >= this.bits;
 }
 
 // ---------
@@ -128,5 +126,13 @@ function decode_base64( code )
  */
 function calc_bits_required( n )
 {
-	return Math.floor( Math.log2(n) + 1 );
+	if( BROWSER_TYPE == BROWSER_TYPE_IE )
+	{
+		var	log2_n = Math.log(n) / Math.log(2);
+		return Math.floor( log2_n + 1 );
+	}
+	else
+	{
+		return Math.floor( Math.log2(n) + 1 );
+	}
 }

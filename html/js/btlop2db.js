@@ -58,42 +58,41 @@ var sel_sort = null;
 var	args = {}
 
 // ---------
-/**	@brief	Filtering rule class
+/*	Filtering rule class
  */
-class FilteringRule
+
+//!	@brief	Constructor
+var FilteringRule = function()
 {
-	//!	@brief	Constructor
-	constructor()
-	{
-		this.enable_columns = null;
-		this.filter = {};
-		this.sort = [];
-		this.show_detail = false;
-	}
+	this.enable_columns = null;
+	this.filter = {};
+	this.sort = [];
+	this.show_detail = false;
+}
 
 	//!	@brief	Store from oject
-	store_obj(obj)
-	{
-		this.enable_columns = obj.enable_columns;
-		this.filter = obj.filter;
-		this.sort = obj.sort;
-		this.show_detail = obj.show_detail;
-	}
+FilteringRule.prototype.store_obj = function(obj)
+{
+	this.enable_columns = obj.enable_columns;
+	this.filter = obj.filter;
+	this.sort = obj.sort;
+	this.show_detail = obj.show_detail;
+}
 
 	//!	@brief	Check whether sorting is required
-	require_sort()
+FilteringRule.prototype.require_sort = function()
+{
+	for( var i = 0; i < this.sort.length; ++i )
 	{
-		for( var i = 0; i < this.sort.length; ++i )
+		if( this.sort[i] )
 		{
-			if( this.sort[i] )
-			{
-				if( this.sort[i][0] > 0 )
-					return true;
-			}
+			if( this.sort[i][0] > 0 )
+				return true;
 		}
-		return false;
 	}
+	return false;
 }
+
 var filtering_rule = new FilteringRule();
 
 // ---------
@@ -661,7 +660,13 @@ function updateMSList(update_filter)
 	if( !filtering_rule.enable_columns )
 	{
 		// Set default showing columns
-		filtering_rule.enable_columns = db_ms.columns.concat().filter( n => n != 'id' && n != 'eval' );
+		filtering_rule.enable_columns = db_ms.columns.concat([]);
+		filtering_rule.enable_columns = filtering_rule.enable_columns.filter( 
+			function(n)
+			{
+				return n != 'id' && n != 'eval';
+			}
+		);
 	}
 
 	// Filtering with user's rules
@@ -1035,7 +1040,7 @@ function updateMSList(update_filter)
  */
 function init()
 {
-	var	params = location.search;
+	var	params = '' + location.search;
 	if( params.startsWith('?') )
 	{
 		params = params.substring(1).split('&');
