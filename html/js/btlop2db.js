@@ -307,7 +307,7 @@ function add_filter(tbl, name, id_, arr)
 
 			var	incel = inrow.insertCell( -1 );
 			incel.style.border = 'none';
-			incel.appendChild( chk );
+			incel.innerHTML = chk;
 
 			colnum += 1;
 			if( colnum >= maxcols )

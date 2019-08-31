@@ -85,6 +85,15 @@ function get_current_url()
  */
 function create_checkbox(id_, label_, init_)
 {
+	var	chk = '<input type="checkbox" id="' + id_ + '"';
+	if( init_ )
+		chk += ' checked';
+	chk += ' />';
+
+	var	spn = '<span class="checkmark" />'
+
+	return '<label class="container">' + label_ + chk + spn + '</label>';
+/*
 	var elem = document.createElement('label');
 	elem.className = 'container';
 	elem.innerText = label_;
@@ -99,7 +108,7 @@ function create_checkbox(id_, label_, init_)
 	spn.className = 'checkmark';
 	elem.appendChild( spn );
 
-	return elem;
+	return elem;*/
 }
 
 // ---------
