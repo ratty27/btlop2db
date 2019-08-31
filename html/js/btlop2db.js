@@ -720,7 +720,7 @@ function updateMSList(update_filter)
 		filtering_rule.enable_columns = filtering_rule.enable_columns.filter( 
 			function(n)
 			{
-				return n != 'id' && n != 'eval';
+				return n != 'id' && n != 'eval' && n != 'enhancement';
 			}
 		);
 	}
