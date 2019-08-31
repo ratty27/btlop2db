@@ -35,6 +35,7 @@ var	PARAM_NAME = {
 	"eval": "評価"
 }
 
+var	MODE_NAME = ['ＭＳ一覧', 'カスタムパーツ'];
 var FILTER_PARAM = ['cost', 'type', 'level', 'rarity', 'melee_power'];
 var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity', "eval", 'melee_power'];
 var SORT_TYPE = ['昇順', '降順'];
@@ -115,6 +116,41 @@ function read_file(url, func)
 		}
 	}
 	req.send();
+}
+
+// ---------
+/**	@brief	Update mode tab
+ */
+function update_mode_tab()
+{
+	var	tab = '';
+	for( var i = 0; i < MODE_NAME.length; ++i )
+	{
+		tab += '<a href="#" style="text-decoration: none;" onclick="change_mode(' + i + ')">' + MODE_NAME[i] + '</a>　';
+	}
+
+	var	div = document.getElementById( 'mode_tab' );
+	div.innerHTML = tab;
+}
+
+// ---------
+/**	@brief	Change mode
+ */
+function change_mode(mode)
+{
+	switch( mode )
+	{
+	case 0:
+		updateMSList();
+		break;
+
+	case 1:
+		updateCustomPartsSimulator();
+		break;
+
+	default:
+		break;
+	}
 }
 
 // ---------
@@ -1124,6 +1160,7 @@ function init()
 
 	document.getElementById('btlop2dbtitle').href = get_current_url();
 
+	update_mode_tab();
 	update_preset_list();
 }
 
@@ -1527,4 +1564,12 @@ function decode_share_url( e )
 			}
 		}
 	}
+}
+
+// ---------
+/**	@brief	Update custom parts simulator screen
+ */
+function updateCustomPartsSimulator()
+{
+
 }
