@@ -53,6 +53,8 @@ var	db_weapon1 = null;
 var	db_weapon2 = null;
 var db_subweapon = null;
 var	db_skill = null;
+var	db_custom_parts = null;
+var	db_enhancement = null;
 var chk_filter = null;
 var sel_sort = null;
 var	args = {}
@@ -1109,12 +1111,16 @@ function init()
 	var	recv_weapon1 = function(x)   { db_weapon1 = csv_to_db(x);   db_weapon1.sort('name');        updateMSList(true); }
 	var	recv_weapon2 = function(x)   { db_weapon2 = csv_to_db(x);   db_weapon2.sort('name');        updateMSList(true); }
 	var	recv_subweapon = function(x) { db_subweapon = csv_to_db(x); db_subweapon.sort('body');      updateMSList(true); }
-	var	recv_skill = function(x)   { db_skill = csv_to_db(x);       db_skill.sort('name');          updateMSList(true); }
+	var	recv_skill = function(x)     { db_skill = csv_to_db(x);     db_skill.sort('name');          updateMSList(true); }
+	var	recv_custom_parts = function(x) { db_custom_parts = csv_to_db(x); db_custom_parts.sort('name'); updateMSList(true); }
+	var	recv_enhancement = function(x)  { db_enhancement = csv_to_db(x);  db_enhancement.sort('name');  updateMSList(true); }
 	read_file( "db/btlop2_MS.csv?v=0", recv_ms );
 	read_file( "db/btlop2_Weapon1.csv?v=0", recv_weapon1 );
 	read_file( "db/btlop2_Weapon2.csv?v=0", recv_weapon2 );
 	read_file( "db/btlop2_SubWeapon.csv?v=0", recv_subweapon );
 	read_file( "db/btlop2_Skill.csv?v=0", recv_skill );
+	read_file( "db/btlop2_CustomParts.csv?v=0", recv_custom_parts );
+	read_file( "db/btlop2_Enhancement.csv?v=0", recv_enhancement );
 
 	document.getElementById('btlop2dbtitle').href = get_current_url();
 
