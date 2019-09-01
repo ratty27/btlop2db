@@ -81,6 +81,32 @@ function get_current_url()
 }
 
 // ---------
+/**	@brief	Show elements
+ */
+function show_elements(arr)
+{
+	for( var i = 0; i < arr.length; ++i )
+	{
+		var	elem = document.getElementById( arr[i] );
+		if( elem )
+			elem.style.display = 'inline';
+	}
+}
+
+// ---------
+/**	@brief	Hide elements
+ */
+function hide_elements(arr)
+{
+	for( var i = 0; i < arr.length; ++i )
+	{
+		var	elem = document.getElementById( arr[i] );
+		if( elem )
+			elem.style.display = 'none';
+	}
+}
+
+// ---------
 /**	@brief	Create checkbox
  */
 function create_checkbox(id_, label_, init_)

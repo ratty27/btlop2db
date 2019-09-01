@@ -18,6 +18,8 @@ var	Database = function()
 Database.prototype.setColumns = function(columns_)
 {
 	this.columns = columns_;
+	for( var i = 0; i < this.columns.length; ++i )
+		this['idx_' + this.columns[i]] = i;
 }
 
 //!	@brief	Set raw data as DB
@@ -159,6 +161,17 @@ Database.prototype.sort = function(rule)
 	ret.setColumns( this.columns );
 	ret.setRaw( arr );
 	return ret;
+}
+
+//!	@brief	Find single record
+Database.prototype.find = function( func )
+{
+	for( var i = 0; i < this.getRecordNum(); ++i )
+	{
+		if( func(this.raw[i]) )
+			return this.raw[i];
+	}
+	return null;
 }
 
 //!	@brief	Find index
