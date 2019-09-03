@@ -1778,7 +1778,8 @@ function cps_enhance_changed(sel)
  */
 function cps_weapon_changed(sel)
 {
-	custom_parts_setting.main_weapon = sel.selectedOptions[sel.selectedIndex].value;
+	custom_parts_setting.main_weapon = sel[sel.selectedIndex].text;
+	update_cps_availables();
 }
 
 // ---------
@@ -2023,7 +2024,7 @@ function updateCustomPartsSimulator()
 
 	// Status
 	status += '<table style="width: auto;">';
-	status += '<tr><th style="width: 80px;">ステータス</th><th style="width: 80px;">ベース</th><th style="width: 80px;">強化</th><th style="width: 80px;">パーツ</th><th style="width: 80px;">合計</th></tr>';
+	status += '<tr><th style="width: 70px;">ステータス</th><th style="width: 60px;">ベース</th><th style="width: 60px;">強化</th><th style="width: 60px;">パーツ</th><th style="width: 60px;">合計</th></tr>';
 	for( var i = 0; i < CUSTOM_PARTS_STATUS.length; ++i )
 	{
 		status += '<tr><td style="text-align: left">' + PARAM_NAME[CUSTOM_PARTS_STATUS[i]] + '</td>';
