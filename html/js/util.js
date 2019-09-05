@@ -109,9 +109,11 @@ function hide_elements(arr)
 // ---------
 /**	@brief	Create checkbox
  */
-function create_checkbox(id_, label_, init_)
+function create_checkbox(id_, label_, init_, callback)
 {
 	var	chk = '<input type="checkbox" id="' + id_ + '"';
+	if( callback )
+		chk += ' onclick="' + callback + '(this)"';
 	if( init_ )
 		chk += ' checked';
 	chk += ' />';

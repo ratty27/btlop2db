@@ -33,6 +33,13 @@ var	PARAM_NAME = {
 	"skills": "スキル",
 	"melee_power": "格闘判定",
 	"enhancement": "強化",
+	'head': "頭部ＨＰ",
+	'back': "背部ＨＰ",
+	'leg': "脚部ＨＰ",
+	'turn': "旋回性能",
+	'thruster_recovery': "ｽﾗｽﾀｰ\n回復速度",
+	'thruster_overheat': "ｽﾗｽﾀｰ\nｵｰﾊﾞｰﾋｰﾄ\n回復時間",
+	'pdamage': "部位ダメージ",
 	"eval": "評価"
 }
 
@@ -49,8 +56,10 @@ var KEYNAME_PRESET_LIST = '__btlop2db_preset_list__';
 var KEYNAME_USER_EVAL = '__btlop2db_user_eval__';
 
 var	MS_FILTER_ELEMENTS = ['preset', 'preset_hr', 'label_filter', 'label_filter2'];
-var	CUSTOM_PARTS_STATUS = ['hp', 'anti_ammo', 'anti_beam', 'anti_melee', 'ranged', 'melee', 'speed', 'thruster'];
+var	CUSTOM_PARTS_STATUS = ['hp', 'anti_ammo', 'anti_beam', 'anti_melee', 'ranged', 'melee', 'speed', 'thruster',
+	'head', 'back', 'leg', 'turn', 'thruster_recovery', 'thruster_overheat', 'pdamage' ];
 var	CUSTOM_PARTS_SLOT = ['close_range', 'medium_range', 'long_range'];
+
 
 // ---------
 // Variables
@@ -1738,6 +1747,28 @@ function decode_share_url( e )
 }
 
 // ---------
+/**	@brief	Split effect string
+ */
+function split_effect_str(effstr)
+{
+	var	p = effstr.indexOf( '+' );
+	if( p < 0 )
+	{
+		p = effstr.indexOf( '-' );
+		if( p < 0 )
+		{
+			p = effstr.indexOf( '=' );
+			if( p < 0 )
+				return null;
+		}
+	}
+	var	s0 = effstr.substring( 0, p );
+	var	s1 = effstr.substring( p, p + 1 );
+	var	s2 = effstr.substring( p + 1 );
+	return [s0, s1, s2];
+}
+
+// ---------
 /**	@brief	Custom Patrs MS changed event
  */
 function cps_name_changed(sel)
@@ -1854,9 +1885,37 @@ function update_cps_ms_status()
 	// Base
 	for( var i = 0; i < CUSTOM_PARTS_STATUS.length; ++i )
 	{
+		var	val;
+		var	status_idx_name = 'idx_' + CUSTOM_PARTS_STATUS[i];
+		if( status_idx_name in db_ms )
+		{
+			var	idx = db_ms['idx_' + CUSTOM_PARTS_STATUS[i]];
+			val = param[idx];
+		}
+		else
+		{
+			switch( CUSTOM_PARTS_STATUS[i] )
+			{
+			case 'head':
+				val = Math.floor( param[db_ms.idx_hp] * 45 / 100 );
+				break;
+
+			case 'back':
+				val = Math.floor( param[db_ms.idx_hp] * 30 / 100 );
+				break;
+
+			case 'leg':
+				val = Math.floor( param[db_ms.idx_hp] * 60 / 100 );
+				break;
+
+			default:
+				val = '';
+				break;
+			}
+		}
+
 		var	elem_base = document.getElementById( 'base_' + CUSTOM_PARTS_STATUS[i] );
-		var	idx = db_ms['idx_' + CUSTOM_PARTS_STATUS[i]];
-		elem_base.innerText = '' + param[idx];
+		elem_base.innerText = '' + val;
 	}
 
 	// Slot
@@ -1868,14 +1927,18 @@ function update_cps_ms_status()
 	}
 
 	// Enhance
+	for( var i = 0; i < CUSTOM_PARTS_STATUS.length; ++i )
+	{
+		var	elem_enhance = document.getElementById( 'enhance_' + CUSTOM_PARTS_STATUS[i] );
+		elem_enhance.innerText = '';
+	}
+	for( var i = 0; i < CUSTOM_PARTS_SLOT.length; ++i )
+	{
+		var	elem_enhance = document.getElementById( 'enhance_' + CUSTOM_PARTS_SLOT[i] );
+		elem_enhance.innerText = '';
+	}
 	if( custom_parts_setting.ms_enhancement )
 	{
-		for( var i = 0; i < CUSTOM_PARTS_STATUS.length; ++i )
-		{
-			var	elem_enhance = document.getElementById( 'enhance_' + CUSTOM_PARTS_STATUS[i] );
-			elem_enhance.innerText = '';
-		}
-
 		var	idx = db_ms['idx_enhancement'];
 		var	enhance_list = param[idx].split('\n');
 		var	idx_effect = db_enhancement['idx_effect'];
@@ -1884,21 +1947,21 @@ function update_cps_ms_status()
 			var	j = db_enhancement.findIndex( 'name', enhance_list[i] );
 			if( j < 0 )
 				continue;
-			var	s = db_enhancement.raw[j][idx_effect].split(/\+|-|=/);
-			if( s.length != 2 )
+			var	s = split_effect_str( db_enhancement.raw[j][idx_effect] );
+			if( !s )
 				continue;
 			var	k = CUSTOM_PARTS_STATUS.findIndex( function(x){return x == s[0];} );
 			if( k >= 0 )
 			{
 				var	elem_enhance = document.getElementById( 'enhance_' + CUSTOM_PARTS_STATUS[k] );
-				elem_enhance.innerText = '+' + s[1];
+				elem_enhance.innerText = s[1] + s[2];
 			}
 			else if( s[0] == 'slot' )
 			{
 				for( k = 0; k < CUSTOM_PARTS_SLOT.length; ++k )
 				{
 					var	elem_enhance = document.getElementById( 'enhance_' + CUSTOM_PARTS_SLOT[k] );
-					elem_enhance.innerText = '+' + s[1];
+					elem_enhance.innerText = '+' + s[2];
 				}
 			}
 		}
@@ -1988,6 +2051,126 @@ function update_cps_availables()
 }
 
 // ---------
+/**	@brief	Get ID of custom parts checkbox
+ */
+function get_parts_checkbox_id(name, level)
+{
+	return 'chk_' + name + '_' + level;
+}
+
+// ---------
+/**	@brief	Update custom parts status
+ */
+function update_parts_status(chk)
+{
+	var	status = {};
+	// Collect upgrade effects
+	for( var i = 0; i < db_custom_parts.getRecordNum(); ++i )
+	{
+		var	name = db_custom_parts.raw[i][db_custom_parts.idx_name];
+		var	level = db_custom_parts.raw[i][db_custom_parts.idx_level];
+		var	chkid = get_parts_checkbox_id( name, level );
+		var	elem = document.getElementById( chkid );
+		if( !elem.checked )
+			continue;
+		var	effect = split_effect_str( db_custom_parts.raw[i][db_custom_parts.idx_effect] );
+		if( !effect )
+			continue;
+
+		var	val = effect[2];
+		var	percent = false;
+		if( val.endsWith('%') )
+		{
+			percent = true;
+			val = val.substring(0, val.length - 1 );
+		}
+		val = Number(val);
+
+		if( !(effect[0] in status) )
+		{
+			var	type;
+			if( effect[1] == '=' )
+				type = 1;
+			else
+				type = 0;
+			status[effect[0]] = { 'val': val, 'type': type, 'per': percent };
+		}
+		else
+		{
+			if( effect[1] == '+' )
+			{
+				status[effect[0]].val += val;
+			}
+			else if( effect[1] == '-' )
+			{
+				status[effect[0]].val -= val;
+			}
+			else if( effect[1] == '=' )
+			{
+				if( status[effect[0]].val < val )
+					status[effect[0]].val = val;
+			}
+		}
+	}
+	// Show effects
+	// - clear
+	for( var i = 0; i < CUSTOM_PARTS_STATUS.length; ++i )
+	{
+		var	elem = document.getElementById( 'parts_' + CUSTOM_PARTS_STATUS[i] );
+		elem.innerText = '';
+	}
+	// - update
+	for( var key in status )
+	{
+		if( CUSTOM_PARTS_STATUS.indexOf(key) >= 0)
+		{
+			// anti_ammo, anti_beam, anti_melee, ranged, melee, speed, thruster
+			var	elem = document.getElementById( 'parts_' + key );
+			if( elem )
+			{
+				var	val = '' + status[key].val;
+				if( status[key].per )
+					val += '%';
+				if( status[key].type == 0 )
+				{
+					if( status[key].val >= 0 )
+						elem.innerText = '+' + val;
+					else
+						elem.innerText = '' + val;
+				}
+				else if( status[key].type == 1 )
+				{
+					elem.innerText = '=' + val;
+				}
+			}
+		}
+		else
+		{
+/*			switch( key )
+			{
+
+head
+back
+leg
+thruster_overheat
+pdamage
+turn
+thruster_recovery
+
+asl
+reload
+beam_overheat
+focus_time
+shield
+
+			default:
+				break;
+			}*/
+		}
+	}
+}
+
+// ---------
 /**	@brief	Update custom parts simulator screen
  */
 function updateCustomPartsSimulator()
@@ -2063,10 +2246,10 @@ function updateCustomPartsSimulator()
 		custom += '<td><table style="width: auto; box-shadow: none;"><tr>';
 		for( var j = 0; j < cp.getRecordNum(); ++j )
 		{
-			var	id_ = 'chk_' + cplist[i] + '_' + cp.raw[j][db_custom_parts.idx_level];
+			var	id_ = get_parts_checkbox_id( cplist[i], cp.raw[j][db_custom_parts.idx_level] );
 			var	tag = 'Lv' + cp.raw[j][db_custom_parts.idx_level];
 			tag += '(' + cp.raw[j][db_custom_parts.idx_close_range] + '/' + cp.raw[j][db_custom_parts.idx_medium_range] + '/' + cp.raw[j][db_custom_parts.idx_long_range] + ')';
-			var	chk = create_checkbox( id_, tag, false );
+			var	chk = create_checkbox( id_, tag, false, 'update_parts_status' );
 			custom += '<td style="font-size: small; border: none; padding: 0px; margin: 0px;">' + chk + '</td>';
 		}
 		custom += '</tr></table></td>';
