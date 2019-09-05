@@ -37,8 +37,8 @@ var	PARAM_NAME = {
 	'back': "背部ＨＰ",
 	'leg': "脚部ＨＰ",
 	'turn': "旋回性能",
-	'thruster_recovery': "ｽﾗｽﾀｰ\n回復速度",
-	'thruster_overheat': "ｽﾗｽﾀｰ\nｵｰﾊﾞｰﾋｰﾄ\n回復時間",
+	'thruster_recovery': "ｽﾗｽﾀｰ回復速度",
+	'thruster_overheat': "ｽﾗｽﾀｰｵｰﾊﾞｰﾋｰﾄ回復時間",
 	'pdamage': "部位ダメージ",
 	"eval": "評価"
 }
@@ -182,6 +182,39 @@ CustomPartsSetting.prototype.get_weapon_param = function(db, name, level)
 }
 
 // ---------
+/**	@brief	Get sub weapon param
+ */
+CustomPartsSetting.prototype.get_subweapon_param = function(msname, name, level)
+{
+	var	ret = -1;
+	var	idx_level = db_subweapon.idx_level;
+	var	params = db_subweapon.filter( 'body', msname ).filter( 'name', name );
+	for( var i = 0; i < params.getRecordNum(); ++i )
+	{
+		if( params.raw[i][idx_level] == level )
+		{
+			ret = i;
+			break;
+		}
+		else if( params.raw[i][idx_level] < level )
+		{
+			if( ret < 0 )
+			{
+				ret = i;
+			}
+			else if( params.raw[i][idx_level] > params.raw[ret][idx_level] )
+			{
+				ret = i;
+			}
+		}
+	}
+	if( ret >= 0 )
+		return params.raw[ret];
+	else
+		return null;
+}
+
+// ---------
 /**	@brief	Get sub weapon list
  */
 CustomPartsSetting.prototype.get_subweapon_list = function()
@@ -217,7 +250,11 @@ CustomPartsSetting.prototype.check_weapons = function(colname, func)
 	{
 		if( !subs[i] )
 			continue;
-		var	sub = this.get_weapon_param( db_subweapon, subs[i], this.ms_level );
+		if( subs[i] == '' )
+			continue;
+		var	sub = this.get_subweapon_param( this.ms_name, subs[i], this.ms_level );
+		if( !sub )
+			sub = this.get_subweapon_param( this.main_weapon, subs[i], this.ms_level );
 		if( sub )
 		{
 			if( func(sub[colidx]) )
@@ -1780,6 +1817,7 @@ function cps_name_changed(sel)
 	update_cps_ms_level();
 	update_cps_ms_weapon();
 	update_cps_ms_status();
+	update_cps_weapon_table();
 	update_cps_availables();
 }
 
@@ -1810,6 +1848,7 @@ function cps_enhance_changed(sel)
 function cps_weapon_changed(sel)
 {
 	custom_parts_setting.main_weapon = sel[sel.selectedIndex].text;
+	update_cps_weapon_table();
 	update_cps_availables();
 }
 
@@ -2085,6 +2124,8 @@ function update_parts_status(chk)
 			val = val.substring(0, val.length - 1 );
 		}
 		val = Number(val);
+		if( effect[1] == '-' )
+			val = - val;
 
 		if( !(effect[0] in status) )
 		{
@@ -2097,18 +2138,14 @@ function update_parts_status(chk)
 		}
 		else
 		{
-			if( effect[1] == '+' )
-			{
-				status[effect[0]].val += val;
-			}
-			else if( effect[1] == '-' )
-			{
-				status[effect[0]].val -= val;
-			}
-			else if( effect[1] == '=' )
+			if( effect[1] == '=' )
 			{
 				if( status[effect[0]].val < val )
 					status[effect[0]].val = val;
+			}
+			else
+			{
+				status[effect[0]].val += val;
 			}
 		}
 	}
@@ -2119,55 +2156,141 @@ function update_parts_status(chk)
 		var	elem = document.getElementById( 'parts_' + CUSTOM_PARTS_STATUS[i] );
 		elem.innerText = '';
 	}
+	var	sub_weapon = custom_parts_setting.get_subweapon_list();
+	var	parts_weapon = {};
+	parts_weapon['parts_main_weapon1'] = {
+		'db': db_weapon1,
+		'param': custom_parts_setting.get_weapon_param( db_weapon1, custom_parts_setting.main_weapon, custom_parts_setting.ms_level ),
+		'effect': ''
+	};
+	for( var i = 0; i < sub_weapon.length; ++i )
+	{
+		if( sub_weapon[i] == '' )
+			continue;
+
+		var	param = custom_parts_setting.get_subweapon_param( custom_parts_setting.ms_name, sub_weapon[i], custom_parts_setting.ms_level );
+		if( !param )
+			param = custom_parts_setting.get_subweapon_param( custom_parts_setting.main_weapon, sub_weapon[i], custom_parts_setting.ms_level );
+
+		parts_weapon['parts_sub_weapon' + i] = {
+			'db': db_subweapon,
+			'param': param,
+			'effect': ''
+		};
+	}
 	// - update
 	for( var key in status )
 	{
+		var	val = '' + status[key].val;
+		if( status[key].per )
+			val += '%';
+		if( status[key].type == 0 )
+		{
+			if( status[key].val >= 0 )
+				val = '+' + val;
+			else
+				val = '' + val;
+		}
+		else if( status[key].type == 1 )
+		{
+			val = '=' + val;
+		}
 		if( CUSTOM_PARTS_STATUS.indexOf(key) >= 0)
 		{
 			// anti_ammo, anti_beam, anti_melee, ranged, melee, speed, thruster
 			var	elem = document.getElementById( 'parts_' + key );
 			if( elem )
-			{
-				var	val = '' + status[key].val;
-				if( status[key].per )
-					val += '%';
-				if( status[key].type == 0 )
-				{
-					if( status[key].val >= 0 )
-						elem.innerText = '+' + val;
-					else
-						elem.innerText = '' + val;
-				}
-				else if( status[key].type == 1 )
-				{
-					elem.innerText = '=' + val;
-				}
-			}
+				elem.innerText = val;
 		}
 		else
 		{
-/*			switch( key )
+			switch( key )
 			{
+			case 'asl':
+				effect = 'ASL' + val + '　';
+				for( var key in parts_weapon )
+				{
+					if( parts_weapon[key].param[parts_weapon[key].db.idx_asl] == '○' )
+						parts_weapon[key].effect += effect;
+				}
+				break;
 
-head
-back
-leg
-thruster_overheat
-pdamage
-turn
-thruster_recovery
+			case 'reload':
+				effect = 'ﾘﾛｰﾄﾞ時間' + val + '　';
+				for( var key in parts_weapon )
+				{
+					if( parts_weapon[key].param[parts_weapon[key].db.idx_limit_type] == 'bullet' )
+						parts_weapon[key].effect += effect;
+				}
+				break;
 
-asl
-reload
-beam_overheat
-focus_time
-shield
+			case 'beam_overheat':
+				effect = 'ｵｰﾊﾞｰﾋｰﾄ回復時間' + val + '　';
+				for( var key in parts_weapon )
+				{
+					if( parts_weapon[key].param[parts_weapon[key].db.idx_limit_type] == 'heat' )
+						parts_weapon[key].effect += effect;
+				}
+				break;
+
+			case 'focus_time':
+				effect = '収束時間' + val + '　';
+				for( var key in parts_weapon )
+				{
+					if( parts_weapon[key].param[parts_weapon[key].db.idx_focus] == '○'
+					 || parts_weapon[key].param[parts_weapon[key].db.idx_focus] == '◎' )
+						parts_weapon[key].effect += effect;
+				}
+				break;
+
+			case 'shield':
+				effect = 'HP' + val + '　';
+				for( var key in parts_weapon )
+				{
+					if( parts_weapon[key].param[parts_weapon[key].db.idx_type] == 'shield' )
+						parts_weapon[key].effect += effect;
+				}
+				break;
 
 			default:
 				break;
-			}*/
+			}
+			if( effect != '' )
+			{
+			}
 		}
 	}
+	for( var key in parts_weapon )
+	{
+		var	elem = document.getElementById( key );
+		if( elem )
+			elem.innerText = parts_weapon[key].effect;
+	}
+}
+
+// ---------
+/**	@brief	Make weapon table for custom parts status
+ */
+function update_cps_weapon_table()
+{
+	var	status = '';
+	status += '<table style="width: auto;">';
+
+	status += '<tr><th style="width: 270px;">主兵装</th><th style="width: 300px;">パーツ</th></tr>';
+	status += '<tr><td>' + custom_parts_setting.main_weapon + '</td><td id="parts_main_weapon1" /></tr>';
+
+	status += '<tr><th>副兵装</th><th>パーツ</th></tr>';
+	var	sub_weapon = custom_parts_setting.get_subweapon_list();
+	for( var i = 0; i < sub_weapon.length; ++i )
+	{
+		if( sub_weapon[i] != '' )
+			status += '<tr><td>' + sub_weapon[i] + '</td><td id="parts_sub_weapon' + i + '" /></tr>';
+	}
+
+	status += '</table>';
+
+	var	elem = document.getElementById( 'cps_weapon_list' );
+	elem.innerHTML = status;
 }
 
 // ---------
@@ -2202,8 +2325,8 @@ function updateCustomPartsSimulator()
 
 	edit += '</table>';
 
-	var status = '<table style="width: auto; box-shadow: none; background-color: #082030;">';
-	status += '<tr><td style="border: none;">';
+	var status = '<table style="width: auto; box-shadow: none; background-color: #082030; padding=12px;">';
+	status += '<tr><td style="border: none;" rowspan="2">';
 
 	// Status
 	status += '<table style="width: auto;">';
@@ -2218,14 +2341,16 @@ function updateCustomPartsSimulator()
 	}
 	status += '</table>';
 
-	status += '</td><td style="border: none; vertical-align: top;">';
+	status += '</td><td id="cps_weapon_list" style="border: none; vertical-align: top;">';
+
+	status += '</td></tr><tr><td style="border: none; vertical-align: bottom;">';
 
 	// Slots
 	status += '<table style="width: auto;">';
-	status += '<tr><th>パーツスロット</th><th style="width: 40px;">ベース</th><th style="width: 40px;">強化</th></tr>';
-	status += '<tr><td>近距離</td><td id="base_close_range" style="text-align: right" /><td id="enhance_close_range" style="text-align: right" /></tr>';
-	status += '<tr><td>中距離</td><td id="base_medium_range" style="text-align: right" /><td id="enhance_medium_range" style="text-align: right" /></tr>';
-	status += '<tr><td>遠距離</td><td id="base_long_range" style="text-align: right" /><td id="enhance_long_range" style="text-align: right" /></tr>';
+	status += '<tr><th>パーツスロット</th><th style="width: 40px;">ベース</th><th style="width: 40px;">強化</th><th style="width: 50px;">合計</th></tr>';
+	status += '<tr><td>近距離</td><td id="base_close_range" style="text-align: right" /><td id="enhance_close_range" style="text-align: right" /><td id="total_close_rabge" /></tr>';
+	status += '<tr><td>中距離</td><td id="base_medium_range" style="text-align: right" /><td id="enhance_medium_range" style="text-align: right" /><td id="total_medium_rabge" /></tr>';
+	status += '<tr><td>遠距離</td><td id="base_long_range" style="text-align: right" /><td id="enhance_long_range" style="text-align: right" /><td id="total_long_rabge" /></tr>';
 	status += '</table>';
 
 	status += '</td></tr>';
@@ -2268,6 +2393,7 @@ function updateCustomPartsSimulator()
 	update_cps_ms_level();
 	update_cps_ms_weapon();
 	update_cps_ms_status();
+	update_cps_weapon_table();
 	update_cps_availables();
 
 	var	elem2 = document.getElementById( 'list' );
