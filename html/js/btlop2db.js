@@ -307,7 +307,7 @@ function add_filter(tbl, name, id_, arr)
 
 			var	incel = inrow.insertCell( -1 );
 			incel.style.border = 'none';
-			incel.appendChild( chk );
+			incel.innerHTML = chk;
 
 			colnum += 1;
 			if( colnum >= maxcols )
@@ -720,7 +720,7 @@ function updateMSList(update_filter)
 		filtering_rule.enable_columns = filtering_rule.enable_columns.filter( 
 			function(n)
 			{
-				return n != 'id' && n != 'eval';
+				return n != 'id' && n != 'eval' && n != 'enhancement';
 			}
 		);
 	}

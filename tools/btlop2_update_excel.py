@@ -9,11 +9,12 @@ import	openpyxl
 
 # ----------------------------------------------------------------------
 #	Constants
-SHEETNAME_MS        = 'MS'
-SHEETNAME_WEAPON1   = 'Weapon1'
-SHEETNAME_WEAPON2   = 'Weapon2'
-SHEETNAME_SUBWEAPON = 'SubWeapon'
-SHEETNAME_SKILL     = 'Skill'
+SHEETNAME_MS          = 'MS'
+SHEETNAME_WEAPON1     = 'Weapon1'
+SHEETNAME_WEAPON2     = 'Weapon2'
+SHEETNAME_SUBWEAPON   = 'SubWeapon'
+SHEETNAME_SKILL       = 'Skill'
+SHEETNAME_ENHANCEMENT = 'Enhancement'
 
 # ----------------------------------------------------------------------
 ##	@brief	Search column
@@ -220,6 +221,10 @@ update_sub_items( book[SHEETNAME_SUBWEAPON], subweapon, level )
 # Update skill list
 skills = collect_items( sheet_ms, 'skills' )
 update_items( book[SHEETNAME_SKILL], sorted(skills) )
+
+# Update enhancement list
+enhancement = collect_items( sheet_ms, 'enhancement' )
+update_items( book[SHEETNAME_ENHANCEMENT], sorted(enhancement) )
 
 # Save to file
 book.save( filename )
