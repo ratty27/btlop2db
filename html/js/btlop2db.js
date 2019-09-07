@@ -2359,12 +2359,17 @@ function update_parts_status(chk)
 		}
 	}
 
+	var	total_hp;
+	if( 'total_hp' in custom_parts_setting )
+		total_hp = custom_parts_setting.total_hp;
+	else
+		total_hp = custom_parts_setting.base_hp;
 	if( 'total_head' in custom_parts_setting )
-		custom_parts_setting['total_head'] = Math.floor( custom_parts_setting['base_head'] * custom_parts_setting['total_head'] / 100 );
+		custom_parts_setting.total_head = Math.floor( total_hp * custom_parts_setting.total_head / 100 );
 	if( 'total_back' in custom_parts_setting )
-		custom_parts_setting['total_back'] = Math.floor( custom_parts_setting['base_back'] * custom_parts_setting['total_back'] / 100 );
+		custom_parts_setting.total_back = Math.floor( total_hp * custom_parts_setting.total_back / 100 );
 	if( 'total_leg' in custom_parts_setting )
-		custom_parts_setting['total_leg'] = Math.floor( custom_parts_setting['base_leg'] * custom_parts_setting['total_head'] / 100 );
+		custom_parts_setting.total_leg = Math.floor( total_hp * custom_parts_setting.total_leg / 100 );
 
 	for( var key in parts_weapon )
 	{
