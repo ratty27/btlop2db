@@ -69,6 +69,11 @@ a:active { color: #ffffff; }
 	font-size: small;
 }
 
+.slim {
+	padding: 0px;
+	margin: 0px;
+}
+
 .slotbar {
 	font-weight: 800;
 	padding: 0px;

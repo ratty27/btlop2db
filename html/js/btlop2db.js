@@ -84,6 +84,7 @@ var FilteringRule = function()
 {
 	this.enable_columns = null;
 	this.filter = {};
+	this.filter_name = [];
 	this.sort = [];
 	this.show_detail = false;
 }
@@ -93,6 +94,7 @@ FilteringRule.prototype.store_obj = function(obj)
 {
 	this.enable_columns = obj.enable_columns;
 	this.filter = obj.filter;
+	this.filter_name = obj.filter_name;
 	this.sort = obj.sort;
 	this.show_detail = obj.show_detail;
 }
@@ -531,11 +533,13 @@ function add_filter(tbl, name, id_, arr)
 	var	row = tbl.insertRow(-1);
 
 	var	cell0 = row.insertCell(-1);
-	cell0.innerHTML = name;
+	cell0.innerText = name;
+	cell0.className = 'slim';
 	cell0.style.width = '100px';
 	cell0.style.fontSize = 'small';
 
 	var	cell1 = row.insertCell(-1);
+	cell1.className = 'slim';
 //	if( BROWSER_TYPE == BROWSER_TYPE_IE || BROWSER_TYPE == BROWSER_TYPE_EDGE )
 	{	// Arrange by internal tabe manually, because IE and Edge can't arrange buttons in flex.
 		var	maxcols;
@@ -649,12 +653,16 @@ function apply_filters()
 			availables[type] = true;
 	}
 	// Delete filter type if all items are checked in a category
-	console.log( "---" );
 	for( var type in availables )
 	{
 		if( !availables[type] )
 			delete filtering_rule.filter[type];
 	}
+
+	// Name filter
+	var	elem_filter_name = document.getElementById( 'filter_name' );
+	if( elem_filter_name )
+		filtering_rule.filter_name = elem_filter_name.value.trim().split(/\s+/);
 
 	// Sort
 	for( var i = 0; i < sel_sort.length; ++i )
@@ -787,6 +795,22 @@ function filter_ms(record)
 			}
 		}
 	}
+
+	if( filtering_rule.filter_name.length > 0 )
+	{
+		var	matched = false;
+		for( var i = 0; i < filtering_rule.filter_name.length; ++i )
+		{
+			if( record[db_ms.idx_name].indexOf(filtering_rule.filter_name[i]) >= 0 )
+			{
+				matched = true;
+				break;
+			}
+		}
+		if( !matched )
+			return false;
+	}
+
 	return true;
 }
 
@@ -880,6 +904,22 @@ function updateMSList(update_filter)
 
 		// Evaluation
 		chk_filter = chk_filter.concat( add_filter(tbl_filter, '評価', 'eval', EVAL_PARAM) );
+
+		// Name
+		{
+			var	row = tbl_filter.insertRow(-1);
+
+			var	cell0 = row.insertCell(-1);
+			cell0.innerHTML = '名前';
+			cell0.class ='slim';
+			cell0.style.width = '100px';
+			cell0.style.fontSize = 'small';
+
+			var	cell1 = row.insertCell(-1);
+			cell1.class ='slim';
+			cell1.style.width = 'calc(100% - 100px)';
+			cell1.innerHTML = '<input id="filter_name" type="text" size="60"><div class="slim" style="font-size: x-small; color: #8d8d8d;">※スペース区切りで複数指定可</div>';
+		}
 
 		// misc
 		chk_filter = chk_filter.concat( add_filter(tbl_filter, 'その他', 'misc', ['詳細表示']) );
@@ -1491,6 +1531,10 @@ function restore_filter_parameters()
 			chk.checked = flag;
 		}
 	}
+
+	var	elem_filter_name = document.getElementById( 'filter_name' );
+	if( elem_filter_name )
+		elem_filter_name.value = filtering_rule.filter_name.join(' ');
 
 	var	idx_sort = 0;
 	if( filtering_rule.sort.length > 0 )

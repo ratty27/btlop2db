@@ -118,9 +118,9 @@ function create_checkbox(id_, label_, init_, callback)
 		chk += ' checked';
 	chk += ' />';
 
-	var	spn = '<span class="checkmark" />'
+	var	spn = '<span class="checkmark slim" />'
 
-	return '<label id="' + id_ + '_label" class="container">' + label_ + chk + spn + '</label>';
+	return '<label id="' + id_ + '_label" class="container slim">' + label_ + chk + spn + '</label>';
 }
 
 // ---------
