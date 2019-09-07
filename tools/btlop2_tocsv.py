@@ -9,11 +9,13 @@ import	xlrd
 
 # ----------------------------------------------------------------------
 #	Constants
-SHEETNAME_MS        = 'MS';
-SHEETNAME_WEAPON1   = 'Weapon1';
-SHEETNAME_WEAPON2   = 'Weapon2';
-SHEETNAME_SUBWEAPON = 'SubWeapon';
-SHEETNAME_SKILL     = 'Skill';
+SHEETNAME_MS          = 'MS';
+SHEETNAME_WEAPON1     = 'Weapon1';
+SHEETNAME_WEAPON2     = 'Weapon2';
+SHEETNAME_SUBWEAPON   = 'SubWeapon';
+SHEETNAME_SKILL       = 'Skill';
+SHEETNAME_CUSTOMPARTS = 'CustomParts'
+SHEETNAME_ENHANCEMENT = 'Enhancement'
 
 # ----------------------------------------------------------------------
 ##	@brief	Output as csv
@@ -78,5 +80,7 @@ output_csv( book, SHEETNAME_WEAPON1, basename, 0 )
 output_csv( book, SHEETNAME_WEAPON2, basename, 0 )
 output_csv( book, SHEETNAME_SUBWEAPON, basename, 1 )
 output_csv( book, SHEETNAME_SKILL, basename, 0 )
+output_csv( book, SHEETNAME_CUSTOMPARTS, basename, 0 )
+output_csv( book, SHEETNAME_ENHANCEMENT, basename, 0 )
 
 sys.exit( 0 )

@@ -22,7 +22,9 @@ BTLOP2DB_FILES = [
 	'db/btlop2_Weapon1.csv',
 	'db/btlop2_Weapon2.csv',
 	'db/btlop2_SubWeapon.csv',
-	'db/btlop2_Skill.csv'
+	'db/btlop2_Skill.csv',
+	'db/btlop2_CustomParts.csv',
+	'db/btlop2_Enhancement.csv'
 ]
 
 REFERENCED_FILES = [
