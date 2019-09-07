@@ -120,23 +120,47 @@ function create_checkbox(id_, label_, init_, callback)
 
 	var	spn = '<span class="checkmark" />'
 
-	return '<label class="container">' + label_ + chk + spn + '</label>';
-/*
-	var elem = document.createElement('label');
-	elem.className = 'container';
-	elem.innerText = label_;
+	return '<label id="' + id_ + '_label" class="container">' + label_ + chk + spn + '</label>';
+}
 
-	var chk = document.createElement('input');
-	chk.type = 'checkbox';
-	chk.id = id_;
-	chk.checked = init_;
-	elem.appendChild( chk );
+// ---------
+/**	@brief	Check whetehr checkbox is checked
+ */
+function is_checked(id_)
+{
+	var	elem = document.getElementById( id_ );
+	if( elem )
+		return elem.checked;
+	else
+		return false;
+}
 
-	var spn = document.createElement('span');
-	spn.className = 'checkmark';
-	elem.appendChild( spn );
+// ---------
+/**	@brief	Enable checkbox
+ */
+function enable_checkbox(id_)
+{
+	var	chk = document.getElementById( id_ );
+	if( chk )
+		chk.disabled = false;
 
-	return elem;*/
+	var lbl = document.getElementById( id_ + '_label' );
+	if( lbl )
+		lbl.style.color = '#fdfdfd';
+}
+
+// ---------
+/**	@brief	Disable checkbox
+ */
+function disable_checkbox(id_)
+{
+	var	chk = document.getElementById( id_ );
+	if( chk )
+		chk.disabled = true;
+
+	var lbl = document.getElementById( id_ + '_label' );
+	if( lbl )
+		lbl.style.color = '#8d8d8d';
 }
 
 // ---------

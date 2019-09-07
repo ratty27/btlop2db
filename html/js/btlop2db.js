@@ -60,6 +60,7 @@ var	CUSTOM_PARTS_STATUS = ['hp', 'anti_ammo', 'anti_beam', 'anti_melee', 'ranged
 	'head', 'back', 'leg', 'turn', 'thruster_recovery', 'thruster_overheat', 'pdamage' ];
 var	CUSTOM_PARTS_SLOT = ['close_range', 'medium_range', 'long_range'];
 
+var MAX_CUSTOM_PARTS_NUM = 8;
 
 // ---------
 // Variables
@@ -1858,6 +1859,15 @@ function cps_weapon_changed(sel)
 }
 
 // ---------
+/**	@brief	Custom parts changed event
+ */
+function cps_parts_checked(chk)
+{
+	update_parts_status(chk);
+	update_cps_availables();
+}
+
+// ---------
 /**	@brief	Get MS max level
  */
 function get_ms_max_level(name)
@@ -2030,7 +2040,7 @@ function update_cps_ms_status()
 					var	elem_enhance = document.getElementById( 'enhance_' + CUSTOM_PARTS_SLOT[k] );
 					elem_enhance.innerText = '+' + s[2];
 
-					custom_parts_setting['total_' + CUSTOM_PARTS_SLOT[i]] += Number(s[2]);
+					custom_parts_setting['total_' + CUSTOM_PARTS_SLOT[k]] += Number(s[2]);
 				}
 			}
 		}
@@ -2117,6 +2127,30 @@ function update_cps_availables()
 	{
 		name_back.style.color = '#707070';
 	}
+
+	// Disable parts if slots are shortage
+	var left_close = custom_parts_setting['total_close_range'] - custom_parts_setting['used_close_range'];
+	var left_medium = custom_parts_setting['total_medium_range'] - custom_parts_setting['used_medium_range'];
+	var left_long = custom_parts_setting['total_long_range'] - custom_parts_setting['used_long_range'];
+	for( var i = 0; i < db_custom_parts.getRecordNum(); ++i )
+	{
+		var	name = db_custom_parts.raw[i][db_custom_parts.idx_name];
+		var	level = db_custom_parts.raw[i][db_custom_parts.idx_level];
+		var	chkid = get_parts_checkbox_id( name, level );
+		if( is_checked(chkid) )
+			continue;
+		if( custom_parts_setting.cps_num < MAX_CUSTOM_PARTS_NUM
+		 && db_custom_parts.raw[i][db_custom_parts.idx_close_range] <= left_close
+		 && db_custom_parts.raw[i][db_custom_parts.idx_medium_range] <= left_medium
+		 && db_custom_parts.raw[i][db_custom_parts.idx_long_range] <= left_long )
+		{
+			enable_checkbox( chkid );
+		}
+		else
+		{
+			disable_checkbox( chkid );
+		}
+	}
 }
 
 // ---------
@@ -2134,6 +2168,7 @@ function update_parts_status(chk)
 {
 	var	status = {};
 	var	used_slot = [0, 0, 0];
+	var	cps_num = 0;
 	// Collect upgrade effects
 	for( var i = 0; i < db_custom_parts.getRecordNum(); ++i )
 	{
@@ -2183,7 +2218,9 @@ function update_parts_status(chk)
 		used_slot[0] += db_custom_parts.raw[i][db_custom_parts.idx_close_range];
 		used_slot[1] += db_custom_parts.raw[i][db_custom_parts.idx_medium_range];
 		used_slot[2] += db_custom_parts.raw[i][db_custom_parts.idx_long_range];
+		++cps_num;
 	}
+	custom_parts_setting.cps_num = cps_num;
 	// Show effects
 	// - clear
 	for( var i = 0; i < CUSTOM_PARTS_STATUS.length; ++i )
@@ -2357,15 +2394,25 @@ function update_parts_status(chk)
 	{
 		var	total_name = 'total_' + CUSTOM_PARTS_SLOT[i];
 
+		var	col;
+		if( used_slot[i] <= custom_parts_setting[total_name] )
+			col = 'fdfdfd';
+		else
+			col = 'fd4d4d';
+
 		var	html = '<table style="width: 100%; box-shadow: none;"><tr>';
-		html += '<td style="width: 20px; text-align:right; border: none; padding: 0px; margin: 0px;">' + used_slot[i] + '</td>';
+		html += '<td style="width: 20px; text-align:right; border: none; padding: 0px; margin: 0px; color: #' + col + ';">' + used_slot[i] + '</td>';
 		html += '<td style="width:  8px; text-align:right; border: none; padding: 0px; margin: 0px;">/</td>';
 		html += '<td style="width: 20px; text-align:right; border: none; padding: 0px; margin: 0px;">' + custom_parts_setting[total_name] + '</td>';
 		html += '</tr></table>';
 
 		var	elem = document.getElementById( total_name );
 		elem.innerHTML = html;
+
+		custom_parts_setting['used_' + CUSTOM_PARTS_SLOT[i]] = used_slot[i];
 	}
+	var elem = document.getElementById( 'cps_num' );
+	elem.innerText = '' + cps_num + '/' + MAX_CUSTOM_PARTS_NUM;
 }
 
 // ---------
@@ -2447,8 +2494,8 @@ function updateCustomPartsSimulator()
 
 	// Slots
 	status += '<table style="width: auto;">';
-	status += '<tr><th>パーツスロット</th><th style="width: 40px;">ベース</th><th style="width: 40px;">強化</th><th style="width: 50px;">合計</th></tr>';
-	status += '<tr><td>近距離</td><td id="base_close_range" style="text-align: right" /><td id="enhance_close_range" style="text-align: right" /><td id="total_close_range" /></tr>';
+	status += '<tr><th>パーツスロット</th><th style="width: 40px;">ベース</th><th style="width: 40px;">強化</th><th style="width: 50px;">合計</th><th style="width: 50px;">セット数</th></tr>';
+	status += '<tr><td>近距離</td><td id="base_close_range" style="text-align: right" /><td id="enhance_close_range" style="text-align: right" /><td id="total_close_range" /><td id="cps_num" rowspan="3" style="text-align: center; vertical-align: middle;"/></tr>';
 	status += '<tr><td>中距離</td><td id="base_medium_range" style="text-align: right" /><td id="enhance_medium_range" style="text-align: right" /><td id="total_medium_range" /></tr>';
 	status += '<tr><td>遠距離</td><td id="base_long_range" style="text-align: right" /><td id="enhance_long_range" style="text-align: right" /><td id="total_long_range" /></tr>';
 	status += '</table>';
@@ -2474,7 +2521,7 @@ function updateCustomPartsSimulator()
 			var	id_ = get_parts_checkbox_id( cplist[i], cp.raw[j][db_custom_parts.idx_level] );
 			var	tag = 'Lv' + cp.raw[j][db_custom_parts.idx_level];
 			tag += '(' + cp.raw[j][db_custom_parts.idx_close_range] + '/' + cp.raw[j][db_custom_parts.idx_medium_range] + '/' + cp.raw[j][db_custom_parts.idx_long_range] + ')';
-			var	chk = create_checkbox( id_, tag, false, 'update_parts_status' );
+			var	chk = create_checkbox( id_, tag, false, 'cps_parts_checked' );
 			custom += '<td style="font-size: small; border: none; padding: 0px; margin: 0px;">' + chk + '</td>';
 		}
 		custom += '</tr></table></td>';
