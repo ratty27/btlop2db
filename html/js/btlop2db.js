@@ -1831,6 +1831,7 @@ function cps_level_changed(sel)
 	custom_parts_setting.ms_level = sel.selectedIndex + 1;
 	update_cps_ms_status();
 	update_parts_status();
+	update_cps_availables();
 }
 
 // ---------
@@ -1844,6 +1845,7 @@ function cps_enhance_changed(sel)
 		custom_parts_setting.ms_enhancement = true;
 	update_cps_ms_status();
 	update_parts_status();
+	update_cps_availables();
 }
 
 // ---------
@@ -2400,8 +2402,10 @@ function update_parts_status(chk)
 		var	total_name = 'total_' + CUSTOM_PARTS_SLOT[i];
 
 		var	col;
-		if( used_slot[i] <= custom_parts_setting[total_name] )
+		if( used_slot[i] < custom_parts_setting[total_name] )
 			col = 'fdfdfd';
+		else if( used_slot[i] == custom_parts_setting[total_name] )
+			col = '4dfd4d';
 		else
 			col = 'fd4d4d';
 
