@@ -1818,6 +1818,7 @@ function cps_name_changed(sel)
 	update_cps_ms_weapon();
 	update_cps_ms_status();
 	update_cps_weapon_table();
+	update_parts_status();
 	update_cps_availables();
 }
 
@@ -1828,6 +1829,7 @@ function cps_level_changed(sel)
 {
 	custom_parts_setting.ms_level = sel.selectedIndex + 1;
 	update_cps_ms_status();
+	update_parts_status();
 }
 
 // ---------
@@ -1840,6 +1842,7 @@ function cps_enhance_changed(sel)
 	else
 		custom_parts_setting.ms_enhancement = true;
 	update_cps_ms_status();
+	update_parts_status();
 }
 
 // ---------
@@ -1848,7 +1851,9 @@ function cps_enhance_changed(sel)
 function cps_weapon_changed(sel)
 {
 	custom_parts_setting.main_weapon = sel[sel.selectedIndex].text;
+	update_cps_ms_status();
 	update_cps_weapon_table();
+	update_parts_status();
 	update_cps_availables();
 }
 
@@ -1928,7 +1933,7 @@ function update_cps_ms_status()
 		var	status_idx_name = 'idx_' + CUSTOM_PARTS_STATUS[i];
 		if( status_idx_name in db_ms )
 		{
-			var	idx = db_ms['idx_' + CUSTOM_PARTS_STATUS[i]];
+			var	idx = db_ms[status_idx_name];
 			val = param[idx];
 		}
 		else
@@ -1955,6 +1960,8 @@ function update_cps_ms_status()
 
 		var	elem_base = document.getElementById( 'base_' + CUSTOM_PARTS_STATUS[i] );
 		elem_base.innerText = '' + val;
+
+		custom_parts_setting['base_' + CUSTOM_PARTS_STATUS[i]] = val;
 	}
 
 	// Slot
@@ -1962,7 +1969,10 @@ function update_cps_ms_status()
 	{
 		var	elem_base = document.getElementById( 'base_' + CUSTOM_PARTS_SLOT[i] );
 		var	idx = db_ms['idx_' + CUSTOM_PARTS_SLOT[i]];
-		elem_base.innerText = '' + param[idx];
+		var	val = param[idx];
+		elem_base.innerText = '' + val;
+
+		custom_parts_setting['total_' + CUSTOM_PARTS_SLOT[i]] = val;
 	}
 
 	// Enhance
@@ -1989,11 +1999,29 @@ function update_cps_ms_status()
 			var	s = split_effect_str( db_enhancement.raw[j][idx_effect] );
 			if( !s )
 				continue;
-			var	k = CUSTOM_PARTS_STATUS.findIndex( function(x){return x == s[0];} );
+			var	k = CUSTOM_PARTS_STATUS.indexOf( s[0] );
 			if( k >= 0 )
 			{
 				var	elem_enhance = document.getElementById( 'enhance_' + CUSTOM_PARTS_STATUS[k] );
 				elem_enhance.innerText = s[1] + s[2];
+
+				switch( s[1] )
+				{
+				case '+':
+					custom_parts_setting[CUSTOM_PARTS_STATUS[k]] += Number(s[2]);
+					break;
+
+				case '-':
+					custom_parts_setting[CUSTOM_PARTS_STATUS[k]] -= Number(s[2]);
+					break;
+
+				case '=':
+					custom_parts_setting[CUSTOM_PARTS_STATUS[k]] = Number(s[2]);
+					break;
+
+				default:
+					break;
+				}
 			}
 			else if( s[0] == 'slot' )
 			{
@@ -2001,6 +2029,8 @@ function update_cps_ms_status()
 				{
 					var	elem_enhance = document.getElementById( 'enhance_' + CUSTOM_PARTS_SLOT[k] );
 					elem_enhance.innerText = '+' + s[2];
+
+					custom_parts_setting['total_' + CUSTOM_PARTS_SLOT[i]] += Number(s[2]);
 				}
 			}
 		}
@@ -2103,6 +2133,7 @@ function get_parts_checkbox_id(name, level)
 function update_parts_status(chk)
 {
 	var	status = {};
+	var	used_slot = [0, 0, 0];
 	// Collect upgrade effects
 	for( var i = 0; i < db_custom_parts.getRecordNum(); ++i )
 	{
@@ -2148,6 +2179,10 @@ function update_parts_status(chk)
 				status[effect[0]].val += val;
 			}
 		}
+
+		used_slot[0] += db_custom_parts.raw[i][db_custom_parts.idx_close_range];
+		used_slot[1] += db_custom_parts.raw[i][db_custom_parts.idx_medium_range];
+		used_slot[2] += db_custom_parts.raw[i][db_custom_parts.idx_long_range];
 	}
 	// Show effects
 	// - clear
@@ -2155,6 +2190,10 @@ function update_parts_status(chk)
 	{
 		var	elem = document.getElementById( 'parts_' + CUSTOM_PARTS_STATUS[i] );
 		elem.innerText = '';
+
+		var	total_name = 'total_' + CUSTOM_PARTS_STATUS[i];
+		if( total_name in custom_parts_setting )
+			delete custom_parts_setting[total_name];
 	}
 	var	sub_weapon = custom_parts_setting.get_subweapon_list();
 	var	parts_weapon = {};
@@ -2195,12 +2234,37 @@ function update_parts_status(chk)
 		{
 			val = '=' + val;
 		}
-		if( CUSTOM_PARTS_STATUS.indexOf(key) >= 0)
+		var k = CUSTOM_PARTS_STATUS.indexOf(key);
+		if( k >= 0 )
 		{
 			// anti_ammo, anti_beam, anti_melee, ranged, melee, speed, thruster
 			var	elem = document.getElementById( 'parts_' + key );
 			if( elem )
 				elem.innerText = val;
+
+			// Calculate total value
+			if( typeof custom_parts_setting['base_' + key] == 'number' )
+			{
+				var	total_name = 'total_' + key;
+				if( status[key].type == 0 )
+				{
+					custom_parts_setting[total_name] = custom_parts_setting['base_' + key] + status[key].val;
+				}
+				else if( status[key].type == 1 )
+				{
+					switch( key )
+					{
+					case 'head':
+					case 'back':
+					case 'leg':
+						custom_parts_setting[total_name] = status[key].val;
+						break;
+
+					default:
+						break;
+					}
+				}
+			}
 		}
 		else
 		{
@@ -2255,16 +2319,52 @@ function update_parts_status(chk)
 			default:
 				break;
 			}
-			if( effect != '' )
-			{
-			}
 		}
 	}
+
+	if( 'total_head' in custom_parts_setting )
+		custom_parts_setting['total_head'] = Math.floor( custom_parts_setting['base_head'] * custom_parts_setting['total_head'] / 100 );
+	if( 'total_back' in custom_parts_setting )
+		custom_parts_setting['total_back'] = Math.floor( custom_parts_setting['base_back'] * custom_parts_setting['total_back'] / 100 );
+	if( 'total_leg' in custom_parts_setting )
+		custom_parts_setting['total_leg'] = Math.floor( custom_parts_setting['base_leg'] * custom_parts_setting['total_head'] / 100 );
+
 	for( var key in parts_weapon )
 	{
 		var	elem = document.getElementById( key );
 		if( elem )
 			elem.innerText = parts_weapon[key].effect;
+	}
+
+	// Update total value
+	for( var i = 0; i < CUSTOM_PARTS_STATUS.length; ++i )
+	{
+		var	total_name = 'total_' + CUSTOM_PARTS_STATUS[i];
+		var	val;
+		if( total_name in custom_parts_setting )
+			val = custom_parts_setting[total_name];
+		else if( ('base_' + CUSTOM_PARTS_STATUS[i]) in custom_parts_setting )
+			val = custom_parts_setting['base_' + CUSTOM_PARTS_STATUS[i]];
+		else
+			continue;
+		var	elem = document.getElementById( total_name );
+		if( elem )
+			elem.innerText = '' + val;
+	}
+
+	// Update total slot
+	for( var i = 0; i < CUSTOM_PARTS_SLOT.length; ++i )
+	{
+		var	total_name = 'total_' + CUSTOM_PARTS_SLOT[i];
+
+		var	html = '<table style="width: 100%; box-shadow: none;"><tr>';
+		html += '<td style="width: 20px; text-align:right; border: none; padding: 0px; margin: 0px;">' + used_slot[i] + '</td>';
+		html += '<td style="width:  8px; text-align:right; border: none; padding: 0px; margin: 0px;">/</td>';
+		html += '<td style="width: 20px; text-align:right; border: none; padding: 0px; margin: 0px;">' + custom_parts_setting[total_name] + '</td>';
+		html += '</tr></table>';
+
+		var	elem = document.getElementById( total_name );
+		elem.innerHTML = html;
 	}
 }
 
@@ -2348,9 +2448,9 @@ function updateCustomPartsSimulator()
 	// Slots
 	status += '<table style="width: auto;">';
 	status += '<tr><th>パーツスロット</th><th style="width: 40px;">ベース</th><th style="width: 40px;">強化</th><th style="width: 50px;">合計</th></tr>';
-	status += '<tr><td>近距離</td><td id="base_close_range" style="text-align: right" /><td id="enhance_close_range" style="text-align: right" /><td id="total_close_rabge" /></tr>';
-	status += '<tr><td>中距離</td><td id="base_medium_range" style="text-align: right" /><td id="enhance_medium_range" style="text-align: right" /><td id="total_medium_rabge" /></tr>';
-	status += '<tr><td>遠距離</td><td id="base_long_range" style="text-align: right" /><td id="enhance_long_range" style="text-align: right" /><td id="total_long_rabge" /></tr>';
+	status += '<tr><td>近距離</td><td id="base_close_range" style="text-align: right" /><td id="enhance_close_range" style="text-align: right" /><td id="total_close_range" /></tr>';
+	status += '<tr><td>中距離</td><td id="base_medium_range" style="text-align: right" /><td id="enhance_medium_range" style="text-align: right" /><td id="total_medium_range" /></tr>';
+	status += '<tr><td>遠距離</td><td id="base_long_range" style="text-align: right" /><td id="enhance_long_range" style="text-align: right" /><td id="total_long_range" /></tr>';
 	status += '</table>';
 
 	status += '</td></tr>';
@@ -2394,6 +2494,7 @@ function updateCustomPartsSimulator()
 	update_cps_ms_weapon();
 	update_cps_ms_status();
 	update_cps_weapon_table();
+	update_parts_status();
 	update_cps_availables();
 
 	var	elem2 = document.getElementById( 'list' );
