@@ -2017,18 +2017,19 @@ function update_cps_ms_status()
 				var	elem_enhance = document.getElementById( 'enhance_' + CUSTOM_PARTS_STATUS[k] );
 				elem_enhance.innerText = s[1] + s[2];
 
+				var	key = 'base_' + CUSTOM_PARTS_STATUS[k];
 				switch( s[1] )
 				{
 				case '+':
-					custom_parts_setting[CUSTOM_PARTS_STATUS[k]] += Number(s[2]);
+					custom_parts_setting[key] += Number(s[2]);
 					break;
 
 				case '-':
-					custom_parts_setting[CUSTOM_PARTS_STATUS[k]] -= Number(s[2]);
+					custom_parts_setting[key] -= Number(s[2]);
 					break;
 
 				case '=':
-					custom_parts_setting[CUSTOM_PARTS_STATUS[k]] = Number(s[2]);
+					custom_parts_setting[key] = Number(s[2]);
 					break;
 
 				default:
@@ -2409,10 +2410,24 @@ function update_parts_status(chk)
 		else
 			col = 'fd4d4d';
 
+		var	x = '', y = '', z = '';
+		var	j = 0;
+		for( j = 0; j < Math.min(used_slot[i], custom_parts_setting[total_name]); ++j )
+			x += '|';
+		for( ; j < custom_parts_setting[total_name]; ++j )
+			y += '|';
+		for( ; j < used_slot[i]; ++j )
+			z += '|';
+
 		var	html = '<table style="width: 100%; box-shadow: none;"><tr>';
-		html += '<td style="width: 20px; text-align:right; border: none; padding: 0px; margin: 0px; color: #' + col + ';">' + used_slot[i] + '</td>';
-		html += '<td style="width:  8px; text-align:right; border: none; padding: 0px; margin: 0px;">/</td>';
-		html += '<td style="width: 20px; text-align:right; border: none; padding: 0px; margin: 0px;">' + custom_parts_setting[total_name] + '</td>';
+		html += '<td style="width:  20px; text-align:right; border: none; padding: 0px; margin: 0px; color: #' + col + ';">' + used_slot[i] + '</td>';
+		html += '<td style="width:   8px; text-align:right; border: none; padding: 0px; margin: 0px;">/</td>';
+		html += '<td style="width:  20px; text-align:right; border: none; padding: 0px; margin: 0px;">' + custom_parts_setting[total_name] + '</td>';
+		html += '<td style="width: 152px; text-align:left;  border: none; padding: 0px 0px 0px 4px; margin: 0px;">';
+		html += '<div class="slotbar" style="color: #8d8d8d;">' + y + '</div>';
+		html += '<div class="slotbar" style="color: #8dfd8d;">' + x + '</div>';
+		html += '<div class="slotbar" style="color: #fd8d8d;">' + z + '</div>';
+		html += '</td>';
 		html += '</tr></table>';
 
 		var	elem = document.getElementById( total_name );
@@ -2503,7 +2518,7 @@ function updateCustomPartsSimulator()
 
 	// Slots
 	status += '<table style="width: auto;">';
-	status += '<tr><th>パーツスロット</th><th style="width: 40px;">ベース</th><th style="width: 40px;">強化</th><th style="width: 50px;">合計</th><th style="width: 50px;">セット数</th></tr>';
+	status += '<tr><th>パーツスロット</th><th style="width: 40px;">ベース</th><th style="width: 40px;">強化</th><th style="width: 252px;">合計</th><th style="width: 50px;">セット数</th></tr>';
 	status += '<tr><td>近距離</td><td id="base_close_range" style="text-align: right" /><td id="enhance_close_range" style="text-align: right" /><td id="total_close_range" /><td id="cps_num" rowspan="3" style="text-align: center; vertical-align: middle;"/></tr>';
 	status += '<tr><td>中距離</td><td id="base_medium_range" style="text-align: right" /><td id="enhance_medium_range" style="text-align: right" /><td id="total_medium_range" /></tr>';
 	status += '<tr><td>遠距離</td><td id="base_long_range" style="text-align: right" /><td id="enhance_long_range" style="text-align: right" /><td id="total_long_range" /></tr>';

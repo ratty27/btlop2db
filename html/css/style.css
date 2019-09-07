@@ -69,6 +69,13 @@ a:active { color: #ffffff; }
 	font-size: small;
 }
 
+.slotbar {
+	font-weight: 800;
+	padding: 0px;
+	margin: 0px;
+	display: inline-flex;
+}
+
 /* --- Text --- */
 
 .textborder {
