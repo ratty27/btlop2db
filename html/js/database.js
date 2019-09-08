@@ -105,14 +105,25 @@ Database.prototype.filter = function(rule, key)
 			idx_column = rule;
 		else
 			return null;	// error
-		var	idx = this.findIndex( idx_column, key );
-		if( idx >= 0 )
+		if( this.idx_sorted == idx )
 		{
-			for( var i = idx; i < this.getRecordNum(); ++i )
+			var	idx = this.findIndex( idx_column, key );
+			if( idx >= 0 )
 			{
-				if( this.raw[i][idx_column] != key )
-					break;
-				arr.push( this.raw[i] );
+				for( var i = idx; i < this.getRecordNum(); ++i )
+				{
+					if( this.raw[i][idx_column] != key )
+						break;
+					arr.push( this.raw[i] );
+				}
+			}
+		}
+		else
+		{
+			for( var i = 0; i < this.getRecordNum(); ++i )
+			{
+				if( this.raw[i][idx_column] == key )
+					arr.push( this.raw[i] );
 			}
 		}
 	}
@@ -126,6 +137,7 @@ Database.prototype.filter = function(rule, key)
 Database.prototype.sort = function(rule)
 {
 	var	func;
+	var	idx_sorted_;
 	if( typeof rule == 'string' )
 	{
 		var	idx = this.searchColumn( rule );
@@ -148,18 +160,19 @@ Database.prototype.sort = function(rule)
 				else
 					return 0;
 			};
-		this.idx_sorted = idx;
+		idx_sorted_ = idx;
 	}
 	else
 	{
 		func = rule;
-		this.idx_sorted = -1;
+		idx_sorted_ = -1;
 	}
 
 	var	arr = this.raw.sort( func );
 	var	ret = new Database();
 	ret.setColumns( this.columns );
 	ret.setRaw( arr );
+	ret.idx_sorted = idx_sorted_;
 	return ret;
 }
 
