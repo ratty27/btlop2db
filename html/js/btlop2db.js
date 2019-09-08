@@ -1401,13 +1401,13 @@ function init()
 		}
 	}
 
-	var	recv_ms = function(x)        { db_ms = csv_to_db(x);        db_ms.sort('id'); init_ms_db(); updateMSList(true); }
-	var	recv_weapon1 = function(x)   { db_weapon1 = csv_to_db(x);   db_weapon1.sort('name');        updateMSList(true); }
-	var	recv_weapon2 = function(x)   { db_weapon2 = csv_to_db(x);   db_weapon2.sort('name');        updateMSList(true); }
-	var	recv_subweapon = function(x) { db_subweapon = csv_to_db(x); db_subweapon.sort('body');      updateMSList(true); }
-	var	recv_skill = function(x)     { db_skill = csv_to_db(x);     db_skill.sort('name');          updateMSList(true); }
-	var	recv_custom_parts = function(x) { db_custom_parts = csv_to_db(x); db_custom_parts.sort('name'); updateMSList(true); }
-	var	recv_enhancement = function(x)  { db_enhancement = csv_to_db(x);  db_enhancement.sort('name');  updateMSList(true); }
+	var	recv_ms = function(x)        { db_ms = csv_to_db(x).sort('id'); init_ms_db(); updateMSList(true); }
+	var	recv_weapon1 = function(x)   { db_weapon1 = csv_to_db(x).sort('name');        updateMSList(true); }
+	var	recv_weapon2 = function(x)   { db_weapon2 = csv_to_db(x).sort('name');        updateMSList(true); }
+	var	recv_subweapon = function(x) { db_subweapon = csv_to_db(x).sort('body');      updateMSList(true); }
+	var	recv_skill = function(x)     { db_skill = csv_to_db(x).sort('name');          updateMSList(true); }
+	var	recv_custom_parts = function(x) { db_custom_parts = csv_to_db(x).sort('name'); updateMSList(true); }
+	var	recv_enhancement = function(x)  { db_enhancement = csv_to_db(x).sort('name');  updateMSList(true); }
 	read_file( "db/btlop2_MS.csv?v=0", recv_ms );
 	read_file( "db/btlop2_Weapon1.csv?v=0", recv_weapon1 );
 	read_file( "db/btlop2_Weapon2.csv?v=0", recv_weapon2 );
