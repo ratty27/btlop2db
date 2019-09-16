@@ -1408,10 +1408,10 @@ function init()
 	var	recv_skill = function(x)     { db_skill = csv_to_db(x).sort('name');          updateMSList(true); }
 	var	recv_custom_parts = function(x) { db_custom_parts = csv_to_db(x).sort('name'); updateMSList(true); }
 	var	recv_enhancement = function(x)  { db_enhancement = csv_to_db(x).sort('name');  updateMSList(true); }
-	read_file( "db/btlop2_MS.csv?v=f098b7c3f34b7104c304c3f7f2c301aeb4ee4569", recv_ms );
+	read_file( "db/btlop2_MS.csv?v=c7327f773f7c0bdeefae2a9bc843259cb0af5426", recv_ms );
 	read_file( "db/btlop2_Weapon1.csv?v=e5ab4e4917cbe105cd8479d06ab81133d5e6f77d", recv_weapon1 );
 	read_file( "db/btlop2_Weapon2.csv?v=50404e7c58e2f18512658e7ef92ce9b6c39485c4", recv_weapon2 );
-	read_file( "db/btlop2_SubWeapon.csv?v=8a56c51638ebe6548f4bda9e55ee4cec1233ffe7", recv_subweapon );
+	read_file( "db/btlop2_SubWeapon.csv?v=6f1d93b4a68e55890ec9c0704044daec5440c420", recv_subweapon );
 	read_file( "db/btlop2_Skill.csv?v=2b0f1f14aaae8dc73c221cdc5f310adaf6fcce4a", recv_skill );
 	read_file( "db/btlop2_CustomParts.csv?v=dcd7157c74869a60c3b95191c9aa862b428903f8", recv_custom_parts );
 	read_file( "db/btlop2_Enhancement.csv?v=4c5a038802c79f44d2884343d9889350ef7eb3bc", recv_enhancement );
