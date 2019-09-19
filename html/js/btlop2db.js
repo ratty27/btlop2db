@@ -1411,7 +1411,7 @@ function init()
 	read_file( "db/btlop2_MS.csv?v=c7327f773f7c0bdeefae2a9bc843259cb0af5426", recv_ms );
 	read_file( "db/btlop2_Weapon1.csv?v=e5ab4e4917cbe105cd8479d06ab81133d5e6f77d", recv_weapon1 );
 	read_file( "db/btlop2_Weapon2.csv?v=50404e7c58e2f18512658e7ef92ce9b6c39485c4", recv_weapon2 );
-	read_file( "db/btlop2_SubWeapon.csv?v=6f1d93b4a68e55890ec9c0704044daec5440c420", recv_subweapon );
+	read_file( "db/btlop2_SubWeapon.csv?v=16b1bad67d5830bcc13fc3110000f2efa1831eb3", recv_subweapon );
 	read_file( "db/btlop2_Skill.csv?v=2b0f1f14aaae8dc73c221cdc5f310adaf6fcce4a", recv_skill );
 	read_file( "db/btlop2_CustomParts.csv?v=dcd7157c74869a60c3b95191c9aa862b428903f8", recv_custom_parts );
 	read_file( "db/btlop2_Enhancement.csv?v=4c5a038802c79f44d2884343d9889350ef7eb3bc", recv_enhancement );
