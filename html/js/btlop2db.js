@@ -1030,6 +1030,7 @@ function updateMSList(update_filter)
 		db = db.sort( function(rec0, rec1)
 			{
 				var	sorted_by_name = false;
+				var	sorted_by_level = false;
 				for( var i = 0; i < filtering_rule.sort.length; ++i )
 				{
 					if( !filtering_rule.sort[i] )
@@ -1064,15 +1065,25 @@ function updateMSList(update_filter)
 						}
 						if( SORT_PARAM[type - 1] == 'name' )
 							sorted_by_name = true;
+						else if( SORT_PARAM[type - 1] == 'level' )
+							sorted_by_level = true;
 					}
 				}
 				if( !sorted_by_name )
-				{
-					var	idx = db_ms.searchColumn( 'name' );
+				{	// Sort by name in default
+					var	idx = db_ms.idx_name;
 					if( rec0[idx] < rec1[idx] )
 						return -1;
 					else if( rec0[idx] > rec1[idx] )
 						return 1;
+				}
+				if( !sorted_by_level )
+				{	// Sort by level in default
+					var	idx = db_ms.idx_level;
+					if( rec0[idx] < rec1[idx] )
+						return 1;
+					else if( rec0[idx] > rec1[idx] )
+						return -1;
 				}
 				return 0;
 			} );
