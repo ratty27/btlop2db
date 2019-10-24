@@ -520,7 +520,11 @@ function get_weapon_param( db, name, level, body )
  */
 function create_disp_weapon( db, name, level, body )
 {
-	return '<span title="' + get_weapon_param(db, name, level, body) + '">' + name + '</span>';
+	var	sname = name.split('\n');
+	var	lst = [];
+	for( var i = 0; i < sname.length; ++i )
+		lst.push( '<span title="' + get_weapon_param(db, sname[i], level, body) + '">' + sname[i] + '</span>' );
+	return lst.join('<br>');
 }
 
 // ---------
