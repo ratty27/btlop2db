@@ -381,7 +381,7 @@ function init_ms_db()
 	var	idx_type = db_ms.searchColumn( 'type' );
 	var	idx_compati = db_ms.searchColumn( 'compatibility' );
 	var	idx_melee_power = db_ms.searchColumn( 'melee_power' );
-	for( var i = 0; i < db_ms.getRecordNum(); ++i )
+	for( let i = 0; i < db_ms.getRecordNum(); ++i )
 	{
 		var	type = db_ms.raw[i][idx_type];
 		if( type == 'general' )
@@ -412,6 +412,19 @@ function init_ms_db()
 		decode_share_url( args['e'] );
 	else
 		load_evaluation();
+
+	// Accept filtering rule by URL parameter, if exists.
+	for( let i = 0; i < db_ms.getColumnNum(); ++i )
+	{
+		let name = db_ms.getColumnName( i );
+		if( name in args )
+		{
+			if( name === 'name' )
+				filtering_rule.filter_name = args[name].split(",");
+			else
+				filtering_rule.filter[name] = args[name].split(",");
+		}
+	}
 }
 
 // ---------
@@ -1402,7 +1415,7 @@ function updateMSList(update_filter)
  */
 function init()
 {
-	var	params = '' + location.search;
+	var	params = decodeURI( '' + location.search );
 	if( params.startsWith('?') )
 	{
 		params = params.substring(1).split('&');
@@ -1433,6 +1446,7 @@ function init()
 
 	document.getElementById('btlop2dbtitle').href = get_current_url();
 
+	// 
 	update_mode_tab();
 	update_preset_list();
 }

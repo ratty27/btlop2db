@@ -54,6 +54,11 @@ Database.prototype.getColumnNum = function()
 		return 0;
 }
 
+Database.prototype.getColumnName = function(idx)
+{
+	return this.columns[idx];
+}
+
 //!	@brief	Search column
 Database.prototype.searchColumn = function(name)
 {
