@@ -44,7 +44,7 @@ var	PARAM_NAME = {
 }
 
 var	MODE_NAME = ['ＭＳ一覧', 'カスタムパーツ'];
-var FILTER_PARAM = ['cost', 'type', 'level', 'rarity', 'melee_power'];
+var FILTER_PARAM = ['cost', 'type', 'melee_power'];
 var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity', "eval", 'melee_power'];
 var SORT_TYPE = ['昇順', '降順'];
 var EVAL_PARAM = ['Ｓ', 'Ａ', 'Ｂ', 'Ｃ', 'Ｄ', 'Ｅ'];
