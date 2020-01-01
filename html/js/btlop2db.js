@@ -45,7 +45,9 @@ var	PARAM_NAME = {
 
 var	MODE_NAME = ['ＭＳ一覧', 'カスタムパーツ'];
 var FILTER_PARAM = ['cost', 'type', 'melee_power'];
-var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity', "eval", 'melee_power'];
+var SORT_PARAM = ['name', 'cost', 'type', 'level', 'rarity', "eval", 'melee_power',
+	'hp', 'anti_ammo', 'anti_beam', 'anti_melee', 'ranged', 'melee', 'speed', 'thruster'];
+var	SORT_SET_NUM = 5;
 var SORT_TYPE = ['昇順', '降順'];
 var EVAL_PARAM = ['Ｓ', 'Ａ', 'Ｂ', 'Ｃ', 'Ｄ', 'Ｅ'];
 var MELEE_POWER_PARAM = ['弱', '中', '強'];
@@ -994,7 +996,7 @@ function updateMSList(update_filter)
 		var sort_arr = ['なし'];
 		for( var i = 0; i < SORT_PARAM.length; ++i )
 			sort_arr.push( PARAM_NAME[ SORT_PARAM[i] ] );
-		for( var i = 0; i < SORT_PARAM.length; ++i )
+		for( var i = 0; i < SORT_SET_NUM; ++i )
 		{
 			var	row = tbl_sort.insertRow(-1);
 
@@ -1062,7 +1064,7 @@ function updateMSList(update_filter)
 					else
 					{
 						var	idx = db_ms.searchColumn( SORT_PARAM[type - 1] );
-						if( type == 7 )
+						if( SORT_PARAM[type - 1] == 'melee_power' )
 						{	// Melee power
 							var	n0 = MELEE_POWER_PARAM.findIndex( function(x){return x == rec0[idx];} );
 							var	n1 = MELEE_POWER_PARAM.findIndex( function(x){return x == rec1[idx];} );
