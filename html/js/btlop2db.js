@@ -1075,7 +1075,7 @@ function updateMSList(update_filter)
 						}
 						else
 						{
-							if( type == 6 )		// Evaluaion value
+							if( SORT_PARAM[type - 1] == 'eval' )		// Evaluaion value
 								less = - less;
 							if( rec0[idx] < rec1[idx] )
 								return less;
