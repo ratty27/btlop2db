@@ -51,6 +51,7 @@ var	SORT_SET_NUM = 5;
 var SORT_TYPE = ['昇順', '降順'];
 var EVAL_PARAM = ['Ｓ', 'Ａ', 'Ｂ', 'Ｃ', 'Ｄ', 'Ｅ'];
 var MELEE_POWER_PARAM = ['弱', '中', '強'];
+var	CATEGORY_PARAM = ['強襲', '汎用', '支援'];
 
 var	DEFAULT_EVALUATION = 5;
 
@@ -1064,7 +1065,16 @@ function updateMSList(update_filter)
 					else
 					{
 						var	idx = db_ms.searchColumn( SORT_PARAM[type - 1] );
-						if( SORT_PARAM[type - 1] == 'melee_power' )
+						if( SORT_PARAM[type - 1] == 'type' )
+						{	// Melee power
+							var	n0 = CATEGORY_PARAM.findIndex( function(x){return x == rec0[idx];} );
+							var	n1 = CATEGORY_PARAM.findIndex( function(x){return x == rec1[idx];} );
+							if( n0 < n1 )
+								return less;
+							else if( n0 > n1 )
+								return - less;
+						}
+						else if( SORT_PARAM[type - 1] == 'melee_power' )
 						{	// Melee power
 							var	n0 = MELEE_POWER_PARAM.findIndex( function(x){return x == rec0[idx];} );
 							var	n1 = MELEE_POWER_PARAM.findIndex( function(x){return x == rec1[idx];} );
@@ -1080,12 +1090,13 @@ function updateMSList(update_filter)
 							if( rec0[idx] < rec1[idx] )
 								return less;
 							else if( rec0[idx] > rec1[idx] )
-								return - less;
+									return - less;
+
+							if( SORT_PARAM[type - 1] == 'name' )
+								sorted_by_name = true;
+							else if( SORT_PARAM[type - 1] == 'level' )
+								sorted_by_level = true;
 						}
-						if( SORT_PARAM[type - 1] == 'name' )
-							sorted_by_name = true;
-						else if( SORT_PARAM[type - 1] == 'level' )
-							sorted_by_level = true;
 					}
 				}
 				if( !sorted_by_name )
