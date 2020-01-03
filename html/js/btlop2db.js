@@ -763,8 +763,12 @@ function apply_filters()
 
 	// Name filter
 	var	elem_filter_name = document.getElementById( 'filter_name' );
+	filtering_rule.filter_name = [];
 	if( elem_filter_name )
-		filtering_rule.filter_name = elem_filter_name.value.trim().split(/\s+/);
+	{
+		if( elem_filter_name.value.length > 0 )
+			filtering_rule.filter_name = elem_filter_name.value.trim().split(/\s+/);
+	}
 
 	// Sort
 	for( var i = 0; i < sel_sort.length; ++i )
@@ -823,6 +827,16 @@ function update_filter_url()
 	var	urlparam = encodeURI( param.join("&") );
 	var	elem = document.getElementById( "filter_url" );
 	elem.value = get_current_url() + '?' + urlparam;
+}
+
+// ---------
+/**	@brief	Copy filter URL to clipboard
+ */
+function copy_filter_url()
+{
+	var	elem = document.getElementById( 'filter_url' );
+	elem.select();
+	document.execCommand( 'copy' );
 }
 
 // ---------
