@@ -417,15 +417,33 @@ function init_ms_db()
 		load_evaluation();
 
 	// Accept filtering rule by URL parameter, if exists.
-	for( let i = 0; i < db_ms.getColumnNum(); ++i )
+	for( var i = 0; i < db_ms.getColumnNum(); ++i )
 	{
-		let name = db_ms.getColumnName( i );
+		var name = db_ms.getColumnName( i );
 		if( name in args )
 		{
+			var	val = decodeURI( args[name] ).split( "," );
 			if( name === 'name' )
-				filtering_rule.filter_name = args[name].split(",");
+				filtering_rule.filter_name = val;
 			else
-				filtering_rule.filter[name] = args[name].split(",");
+				filtering_rule.filter[name] = val;
+		}
+	}
+
+	// Accept sorting rule by URL parameter, if exists.
+	for( var i = 0; i < SORT_SET_NUM; ++i )
+	{
+		var	key = "sort" + i;
+		if( key in args )
+		{
+			var	val = decodeURI( args[key] ).split( "," );
+			if( val.length != 2 )
+				continue;
+			var	type = SORT_PARAM.findIndex( function(n){return n == val[0];} );
+			if( type < 0 )
+				continue;
+
+			filtering_rule.sort.push( [type + 1, Number(val[1])] );
 		}
 	}
 }
@@ -763,7 +781,48 @@ function apply_filters()
 		}
 	}
 
+	update_filter_url();
+
 	updateMSList( false );
+}
+
+// ---------
+/**	@brief	Update filter URL
+ */
+function update_filter_url()
+{
+	var	param = [];
+
+	// Filter
+	for( var type in filtering_rule.filter )
+	{
+		var	vals = filtering_rule.filter[type];
+		if( vals.length == 0 )
+			continue;
+
+		param.push( type + "=" + vals.join( "," ) );
+	}
+	// Name filter
+	if( filtering_rule.filter_name.length > 0 )
+	{
+		param.push( "name=" + filtering_rule.filter_name.join( "," ) );
+	}
+
+	// Sort
+	for( var i = 0; i < filtering_rule.sort.length; ++i )
+	{
+		if( !filtering_rule.sort[i] )
+			continue;
+		var	type = filtering_rule.sort[i][0];
+		var	dir = filtering_rule.sort[i][1];
+
+		param.push( "sort" + i + "=" + SORT_PARAM[type - 1] + "," + dir );
+	}
+
+	// Publish
+	var	urlparam = encodeURI( param.join("&") );
+	var	elem = document.getElementById( "filter_url" );
+	elem.value = get_current_url() + '?' + urlparam;
 }
 
 // ---------
@@ -1446,7 +1505,7 @@ function updateMSList(update_filter)
 	// - URL label
 	var rl_exp = 'このURLをコピペすれば、あなたの評価設定を他の人に見て\nもらうことが出来ます。\nこのURLを開いても、その相手が「変更した評価を保存する」\nボタンを押さない限り、相手の評価データが破壊されることは\nありません。';
 	var url_label = document.createElement( 'span' );
-	url_label.innerText = '共有用URL:';
+	url_label.innerText = '評価共有用URL:';
 	url_label.title = rl_exp;
 	url_div.appendChild( url_label );
 

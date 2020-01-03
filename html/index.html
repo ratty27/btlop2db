@@ -40,9 +40,18 @@
 
 	<hr id='preset_hr'>
 
-	<input type="checkbox" id="label_filter" onclick='clickFilter()'/>
-	<label id="label_filter2" for="label_filter" style="cursor: pointer;">フィルタ／ソート</label>
-    <div id="filter" style="transition: 0.5s; height: auto;">
+	<table style="width: 100%; box-shadow: none;"><tr>
+		<td style="border: none; font-size: x-small;">
+			<input type="checkbox" id="label_filter" onclick='clickFilter()'/>
+			<label id="label_filter2" for="label_filter" style="cursor: pointer;">フィルタ／ソート</label>
+		</td>
+		<td style="border: none; font-size: x-small; text-align: right;">
+			<span>フィルタURL:</span>
+			<input type="text" style="width: 512px; font-size: x-small;" id="filter_url">
+			<button style="width: 60px; font-size: x-small;">コピー</button>
+		</td>
+	</tr></table>
+	<div id="filter" style="transition: 0.5s; height: auto;">
 	</div>
 
 	<hr>
