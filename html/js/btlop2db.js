@@ -75,6 +75,7 @@ var	db_skill = null;
 var	db_custom_parts = null;
 var	db_enhancement = null;
 var chk_filter = null;
+var	sel_filter = null;
 var sel_sort = null;
 var	args = {}
 
@@ -416,16 +417,31 @@ function init_ms_db()
 	else
 		load_evaluation();
 
-	// Accept filtering rule by URL parameter, if exists.
-	for( let i = 0; i < db_ms.getColumnNum(); ++i )
+	// Accept filtering rules by URL parameter, if exists.
+	for( var key in args )
 	{
-		let name = db_ms.getColumnName( i );
-		if( name in args )
+		var	val = decodeURI( args[key] ).split( "," );
+		if( key == 'e' )
 		{
-			if( name === 'name' )
-				filtering_rule.filter_name = args[name].split(",");
-			else
-				filtering_rule.filter[name] = args[name].split(",");
+
+		}
+		else if( key.startsWith('sort') )
+		{
+			if( val.length != 2 )
+				continue;
+			var	type = SORT_PARAM.findIndex( function(n){return n == val[0];} );
+			if( type < 0 )
+				continue;
+
+			filtering_rule.sort.push( [type + 1, Number(val[1])] );
+		}
+		else if( key == 'name' )
+		{
+			filtering_rule.filter_name = val;
+		}
+		else
+		{
+			filtering_rule.filter[key] = val;
 		}
 	}
 }
@@ -623,7 +639,7 @@ function add_filter(tbl, name, id_, arr, with_selector)
 		else
 			disp = 'block';
 
-		var	tblid = "filter_table_" + name;
+		var	tblid = "filter_table_" + id_;
 		var	intbl = "<table style='width: auto; box-shadow: none; display: " + disp + ";' id='" + tblid + "'>";
 		var	inrow = "";
 		var	colnum = 0;
@@ -658,6 +674,8 @@ function add_filter(tbl, name, id_, arr, with_selector)
 			var	selitems = ['カスタム', '全て'].concat( arr );
 			var	chknames = ret.concat();
 			insel = create_pulldown(selid, selitems, 1, 200, "callback_filter(this,'" + id_ + "','" + tblid + "')" );
+
+			sel_filter.push( selid );
 		}
 
 		cell1.innerHTML = insel + intbl;
@@ -745,8 +763,12 @@ function apply_filters()
 
 	// Name filter
 	var	elem_filter_name = document.getElementById( 'filter_name' );
+	filtering_rule.filter_name = [];
 	if( elem_filter_name )
-		filtering_rule.filter_name = elem_filter_name.value.trim().split(/\s+/);
+	{
+		if( elem_filter_name.value.length > 0 )
+			filtering_rule.filter_name = elem_filter_name.value.trim().split(/\s+/);
+	}
 
 	// Sort
 	for( var i = 0; i < sel_sort.length; ++i )
@@ -763,7 +785,58 @@ function apply_filters()
 		}
 	}
 
+	update_filter_url();
+
 	updateMSList( false );
+}
+
+// ---------
+/**	@brief	Update filter URL
+ */
+function update_filter_url()
+{
+	var	param = [];
+
+	// Filter
+	for( var type in filtering_rule.filter )
+	{
+		var	vals = filtering_rule.filter[type];
+		if( vals.length == 0 )
+			continue;
+
+		param.push( type + "=" + vals.join( "," ) );
+	}
+	// Name filter
+	if( filtering_rule.filter_name.length > 0 )
+	{
+		param.push( "name=" + filtering_rule.filter_name.join( "," ) );
+	}
+
+	// Sort
+	for( var i = 0; i < filtering_rule.sort.length; ++i )
+	{
+		if( !filtering_rule.sort[i] )
+			continue;
+		var	type = filtering_rule.sort[i][0];
+		var	dir = filtering_rule.sort[i][1];
+
+		param.push( "sort" + i + "=" + SORT_PARAM[type - 1] + "," + dir );
+	}
+
+	// Publish
+	var	urlparam = encodeURI( param.join("&") );
+	var	elem = document.getElementById( "filter_url" );
+	elem.value = get_current_url() + '?' + urlparam;
+}
+
+// ---------
+/**	@brief	Copy filter URL to clipboard
+ */
+function copy_filter_url()
+{
+	var	elem = document.getElementById( 'filter_url' );
+	elem.select();
+	document.execCommand( 'copy' );
 }
 
 // ---------
@@ -942,6 +1015,7 @@ function updateMSList(update_filter)
 
 		// Parameters
 		chk_filter = []
+		sel_filter = [];
 		for( var i = 0; i < FILTER_PARAM.length; ++i )
 		{
 			var keyname = FILTER_PARAM[i];
@@ -1089,9 +1163,8 @@ function updateMSList(update_filter)
 			elem_filter.appendChild( div_filter_sort_button );
 		}
 
+		restore_filter_parameters();
 	}
-
-	restore_filter_parameters();
 
 	// ---
 	// List
@@ -1446,7 +1519,7 @@ function updateMSList(update_filter)
 	// - URL label
 	var rl_exp = 'このURLをコピペすれば、あなたの評価設定を他の人に見て\nもらうことが出来ます。\nこのURLを開いても、その相手が「変更した評価を保存する」\nボタンを押さない限り、相手の評価データが破壊されることは\nありません。';
 	var url_label = document.createElement( 'span' );
-	url_label.innerText = '共有用URL:';
+	url_label.innerText = '評価共有用URL:';
 	url_label.title = rl_exp;
 	url_div.appendChild( url_label );
 
@@ -1585,7 +1658,6 @@ function load_preset()
 		var	rule = JSON.parse( json );
 		filtering_rule.store_obj( rule );
 		updateMSList(true);
-		restore_filter_parameters();
 	}
 }
 
@@ -1622,6 +1694,7 @@ function save_preset()
  */
 function restore_filter_parameters()
 {
+	// Filter checkboxes
 	if( Object.keys(filtering_rule.filter).length > 0 )
 	{
 		for( var i = 0; i < chk_filter.length; ++i )
@@ -1641,10 +1714,56 @@ function restore_filter_parameters()
 		}
 	}
 
+	// Filter selector
+	for( var i = 0; i < sel_filter.length; ++i )
+	{
+		var	sel = document.getElementById( sel_filter[i] );
+		if( !sel )
+			continue;
+
+		// 'filter_sel_???'
+		var	id_ = sel_filter[i].substring( 11, sel_filter[i].length );
+
+		var	num = 0;
+		var	idx = -1;
+		for( var j = 0; j < sel.length; ++j )
+		{
+			var chkname = 'chk_' + id_ + '_' + sel.options[j].text;
+			var	chk = document.getElementById( chkname );
+			if( !chk )
+				continue;
+			if( chk.checked )
+			{
+				idx = j;
+				++num;
+			}
+		}
+
+		var	tblid = "filter_table_" + id_;
+		var	tbl = document.getElementById( tblid );
+		if( num == 1 )
+		{
+			sel.selectedIndex = idx;
+			tbl.style.display = 'none';
+		}
+		else if( num == sel.length - 2 )
+		{
+			sel.selectedIndex = 1;
+			tbl.style.display = 'none';
+		}
+		else
+		{
+			sel.selectedIndex = 0;
+			tbl.style.display = 'block';
+		}
+	}
+
+	// Name filter
 	var	elem_filter_name = document.getElementById( 'filter_name' );
 	if( elem_filter_name )
 		elem_filter_name.value = filtering_rule.filter_name.join(' ');
 
+	// Sorting
 	var	idx_sort = 0;
 	if( filtering_rule.sort.length > 0 )
 	{
