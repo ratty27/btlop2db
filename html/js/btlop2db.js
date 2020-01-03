@@ -927,20 +927,6 @@ function updateMSList(update_filter)
 		var	elem_filter = document.getElementById('filter');
 		elem_filter.innerHTML = '';
 
-		var	div_filter_sort_button = document.createElement('div');
-		if( div_filter_sort_button )
-		{
-			div_filter_sort_button.style.textAlign = 'right';
-
-			var btn_apply = document.createElement('button');
-			btn_apply.style.width = '80px';
-			btn_apply.textContent = '適用';
-			btn_apply.onclick = apply_filters;
-			div_filter_sort_button.appendChild( btn_apply );
-
-			elem_filter.appendChild( div_filter_sort_button );
-		}
-
 		// ---
 		// Filter
 
@@ -1086,6 +1072,23 @@ function updateMSList(update_filter)
 		}
 
 		elem_filter.appendChild( tbl_sort );
+
+		// ---
+		// Apply button
+		var	div_filter_sort_button = document.createElement('div');
+		if( div_filter_sort_button )
+		{
+			div_filter_sort_button.style.textAlign = 'right';
+
+			var btn_apply = document.createElement('button');
+			btn_apply.style.width = '80px';
+			btn_apply.textContent = '適用';
+			btn_apply.onclick = apply_filters;
+			div_filter_sort_button.appendChild( btn_apply );
+
+			elem_filter.appendChild( div_filter_sort_button );
+		}
+
 	}
 
 	restore_filter_parameters();
