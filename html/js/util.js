@@ -170,6 +170,8 @@ function create_pulldown(id_, items_, init_, w, callback)
 {
 	if( !callback )
 		callback = '';
+	else if( callback.indexOf('(') >= 0 )
+		callback = ' onchange="' + callback + '"';
 	else
 		callback = ' onchange="' + callback + '(this)"';
 	var	item = '<div class="cp_ipselect cp_sl02" style="width: ' + w + 'px;"><select id="' + id_ + '"' + callback + '>';

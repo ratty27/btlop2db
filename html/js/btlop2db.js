@@ -544,9 +544,58 @@ function create_disp_weapon( db, name, level, body )
 }
 
 // ---------
+/**	@brief	Callback for filter selector
+ */
+function callback_filter(sel, id_, tblid)
+{
+	var	tbl = document.getElementById( tblid );
+	if( sel.selectedIndex == 0 )
+	{
+		tbl.style.display = 'block';
+
+		for( var i = 0; i < sel.length; ++i )
+		{
+			var chkname = 'chk_' + id_ + '_' + sel.options[i].text;
+			var	chk = document.getElementById( chkname );
+			if( chk )
+				chk.checked = false;
+		}
+	}
+	else if( sel.selectedIndex == 1 )
+	{
+		tbl.style.display = 'none';
+
+		for( var i = 0; i < sel.length; ++i )
+		{
+			var chkname = 'chk_' + id_ + '_' + sel.options[i].text;
+			var	chk = document.getElementById( chkname );
+			if( chk )
+				chk.checked = true;
+		}
+	}
+	else
+	{
+		tbl.style.display = 'none';
+
+		for( var i = 0; i < sel.length; ++i )
+		{
+			var chkname = 'chk_' + id_ + '_' + sel.options[i].text;
+			var	chk = document.getElementById( chkname );
+			if( chk )
+			{
+				if( i == sel.selectedIndex )
+					chk.checked = true;
+				else
+					chk.checked = false;
+			}
+		}
+	}
+}
+
+// ---------
 /**	@brief	Add filter check-boxs
  */
-function add_filter(tbl, name, id_, arr)
+function add_filter(tbl, name, id_, arr, with_selector)
 {
 	var ret = []
 
@@ -568,35 +617,50 @@ function add_filter(tbl, name, id_, arr)
 		else
 			maxcols = arr.length;
 
-		var	intbl = document.createElement( 'table' );
-		intbl.style.width = 'auto';
-		intbl.style.boxShadow = 'none';
-		var	inrow = null;
+		var	disp;
+		if( with_selector )
+			disp = 'none';
+		else
+			disp = 'block';
+
+		var	tblid = "filter_table_" + name;
+		var	intbl = "<table style='width: auto; box-shadow: none; display: " + disp + ";' id='" + tblid + "'>";
+		var	inrow = "";
 		var	colnum = 0;
 		for( var i = 0; i < arr.length; ++i )
 		{
 			if( arr[i] == '' )
 				continue;
 
-			if( !inrow )
-				inrow = intbl.insertRow( -1 );
-
 			var chkname = 'chk_' + id_ + '_' + arr[i];
 			var chk = create_checkbox( chkname, arr[i], true );
 			ret.push( chkname );
 
-			var	incel = inrow.insertCell( -1 );
-			incel.style.border = 'none';
-			incel.innerHTML = chk;
+			var	incel = "<td style='border: none;'>" + chk + "</td>";
+			inrow += incel;
 
 			colnum += 1;
 			if( colnum >= maxcols )
 			{
-				inrow = null;
+				intbl += "<tr>" + inrow + "</tr>";
+				inrow = "";
 				colnum = 0;
 			}
 		}
-		cell1.appendChild( intbl );
+		if( inrow.length > 0 )
+			intbl += "<tr>" + inrow + "</tr>";
+		intbl += "</table>";
+
+		var	insel = '';
+		if( with_selector )
+		{
+			var	selid = 'filter_sel_' + id_;
+			var	selitems = ['カスタム', '全て'].concat( arr );
+			var	chknames = ret.concat();
+			insel = create_pulldown(selid, selitems, 1, 200, "callback_filter(this,'" + id_ + "','" + tblid + "')" );
+		}
+
+		cell1.innerHTML = insel + intbl;
 	}
 /*	else
 	{
@@ -905,10 +969,10 @@ function updateMSList(update_filter)
 				arr = db_ms.distinct( keyname );
 				arr.sort();
 			}
-			chk_filter = chk_filter.concat( add_filter(tbl_filter, PARAM_NAME[keyname], keyname, arr) );
+			chk_filter = chk_filter.concat( add_filter(tbl_filter, PARAM_NAME[keyname], keyname, arr, true) );
 		}
-		chk_filter = chk_filter.concat( add_filter(tbl_filter, '出撃制限', 'stage', ['地上', '宇宙']) );
-		chk_filter = chk_filter.concat( add_filter(tbl_filter, '適正', 'compati', ['地上適正あり', '地上適正なし', '宇宙適正あり', '宇宙適正なし']) );
+		chk_filter = chk_filter.concat( add_filter(tbl_filter, '出撃制限', 'stage', ['地上', '宇宙'], true) );
+		chk_filter = chk_filter.concat( add_filter(tbl_filter, '適正', 'compati', ['地上適正あり', '地上適正なし', '宇宙適正あり', '宇宙適正なし'], true) );
 
 		// Skill
 		var arr_skill0 = db_skill.distinct( 'name' );
@@ -920,10 +984,10 @@ function updateMSList(update_filter)
 			arr_skill1.push( name );
 		}
 		arr_skill1.sort();
-		chk_filter = chk_filter.concat( add_filter(tbl_filter, 'スキル', 'skill', arr_skill1) );
+		chk_filter = chk_filter.concat( add_filter(tbl_filter, 'スキル', 'skill', arr_skill1, true) );
 
 		// Evaluation
-		chk_filter = chk_filter.concat( add_filter(tbl_filter, '評価', 'eval', EVAL_PARAM) );
+		chk_filter = chk_filter.concat( add_filter(tbl_filter, '評価', 'eval', EVAL_PARAM, true) );
 
 		// Name
 		{
@@ -942,11 +1006,11 @@ function updateMSList(update_filter)
 		}
 
 		// misc
-		chk_filter = chk_filter.concat( add_filter(tbl_filter, 'その他', 'misc', ['詳細表示']) );
+		chk_filter = chk_filter.concat( add_filter(tbl_filter, 'その他', 'misc', ['詳細表示'], false) );
 
 		elem_filter.appendChild( tbl_filter );
 
-		var	div_filter_button = document.createElement('div');
+/*		var	div_filter_button = document.createElement('div');
 		if( div_filter_button )
 		{
 			div_filter_button.style.textAlign = 'right';
@@ -978,7 +1042,7 @@ function updateMSList(update_filter)
 			div_filter_button.appendChild( btn_selectall );
 
 			elem_filter.appendChild( div_filter_button );
-		}
+		}*/
 
 		// ---
 		// Sort
