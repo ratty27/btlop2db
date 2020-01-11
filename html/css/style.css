@@ -10,6 +10,7 @@ table {
 	background-color: #203848;
 	box-shadow: 0 0 8px black;
 	width: 100%;
+	transform: rotateX(0deg);
 }
 
 table th {
