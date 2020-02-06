@@ -1589,7 +1589,7 @@ function init()
 	var	recv_skill = function(x)     { db_skill = csv_to_db(x).sort('name');          updateMSList(true); }
 	var	recv_custom_parts = function(x) { db_custom_parts = csv_to_db(x).sort('name'); updateMSList(true); }
 	var	recv_enhancement = function(x)  { db_enhancement = csv_to_db(x).sort('name');  updateMSList(true); }
-	read_file( "db/btlop2_MS.csv?v=6b3368c07a2ccca82be669ce5e463ac4cd50d21b", recv_ms );
+	read_file( "db/btlop2_MS.csv?v=94406e086201544c71155da43eddeadac0791cf9", recv_ms );
 	read_file( "db/btlop2_Weapon1.csv?v=e547c311becdd1b060f97ae98f51f167f6d35ebd", recv_weapon1 );
 	read_file( "db/btlop2_Weapon2.csv?v=cde36b89acc7ce374dbcba3161e34599701a9348", recv_weapon2 );
 	read_file( "db/btlop2_SubWeapon.csv?v=5885b1dad41dd0a4db69c15581ba784f2b8e98fe", recv_subweapon );
