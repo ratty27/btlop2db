@@ -1,4 +1,4 @@
-##
+﻿##
 #	@file	btlop2_update_excel.py
 #	@brief	Update weapon and skill sheet by MS sheet
 #
@@ -140,7 +140,7 @@ def update_sub_items(sheet, items, levels):
 		else:
 			body = ''
 		if body == '':
-			less = True
+			less = False
 		elif body < item_list[i1][0]:
 			less = True
 		elif body > item_list[i1][0]:
@@ -167,10 +167,14 @@ def update_sub_items(sheet, items, levels):
 					less = False
 				else:
 					less = None
+
+		#print( str(i0) + "/" + str(sheet.max_row) + " : " + str(i1) + "/" + str(len(item_list)) + " : " + str(less) )
+		#print( "\"" + body + "\" : " + item_list[i1][0] + " : " + str(less) )
+
 		if less is None:
 			i0 += 1
 			i1 += 1
-		elif not less:
+		elif not less or i0 >= sheet.max_row:
 			sheet.insert_rows( i0 )
 			sheet.cell( row=i0, column=body_col, value=item_list[i1][0] )
 			sheet.cell( row=i0, column=name_col, value=item_list[i1][1] )
